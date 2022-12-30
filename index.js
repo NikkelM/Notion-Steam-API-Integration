@@ -67,10 +67,15 @@ async function findChangesAndAddDetails() {
 				// Get info about this game from the Steam API
 				const appInfo = await getSteamAppInfo(steamAppId).then((appInfo) => { return appInfo; });
 
+				// Get the game's title. If no title is available, use a placeholder
 				const gameTitle = appInfo.common.name ? appInfo.common.name : "CouldNotFetchTitle";
 
+				// Get the URL's for the cover image and icon. Default values have a Steam theme
 				const coverUrl = appInfo.common.header_image?.english ? `https://cdn.cloudflare.steamstatic.com/steam/apps/${steamAppId}/${appInfo.common.header_image.english}` : "https://www.metal-hammer.de/wp-content/uploads/2022/11/22/19/steam-logo.jpg";
+				const iconUrl = appInfo.common.icon ? `https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/${steamAppId}/${appInfo.common.icon}.jpg` : "https://iconarchive.com/download/i75918/martz90/circle/steam.ico";
 
+				// Get the release date. If no version is available, use the Unix epoch
+				// Formatted as YYYY-MM-DD
 				let releaseDate;
 				if (appInfo.common.original_release_date) {
 					releaseDate = new Date(parseInt(appInfo.common.original_release_date) * 1000).toISOString().split("T")[0];
@@ -82,9 +87,13 @@ async function findChangesAndAddDetails() {
 					releaseDate = new Date(0).toISOString().split("T")[0];
 				}
 
+				// Get the Steam user review score as a percentage
 				const steamReviewScore = appInfo.common.review_percentage ? parseInt(appInfo.common.review_percentage) / 100 : null;
+
+				// Parse the tags from the Steam API. If no tags are found, set a "No tags found" placeholder
 				const tags = appInfo.common.store_tags ? await getSteamTagNames(appInfo.common.store_tags).then((tags) => { return tags; }) : ["No tags found"];
 
+				// Update the game's page in the database with the new info
 				await notion.pages.update({
 					page_id: pageId,
 					properties: {
@@ -121,6 +130,12 @@ async function findChangesAndAddDetails() {
 						"type": "external",
 						"external": {
 							"url": coverUrl
+						}
+					},
+					icon: {
+						"type": "external",
+						"external": {
+							"url": iconUrl
 						}
 					}
 				});
