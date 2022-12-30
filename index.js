@@ -67,7 +67,7 @@ async function findChangesAndAddDetails() {
 				const appInfo = await getSteamAppInfo(steamAppId).then((appInfo) => { return appInfo; });
 
 				const gameTitle = appInfo.common.name ?? "CouldNotFetchTitle";
-				const coverUrl = `https://cdn.cloudflare.steamstatic.com/steam/apps/${steamAppId}/header.jpg`;
+				const coverUrl = `https://cdn.cloudflare.steamstatic.com/steam/apps/${steamAppId}/${appInfo.common.header_image.english}` ?? "https://www.metal-hammer.de/wp-content/uploads/2022/11/22/19/steam-logo.jpg";
 
 				let releaseDate;
 				if (appInfo.common.original_release_date) {
@@ -80,7 +80,7 @@ async function findChangesAndAddDetails() {
 					releaseDate = null;
 				}
 
-				const steamReviewScore = parseInt(appInfo.common.review_percentage)/100 ?? null;
+				const steamReviewScore = parseInt(appInfo.common.review_percentage) / 100 ?? null;
 				const tags = await getSteamTagNames(appInfo.common.store_tags).then((tags) => { return tags; }) ?? null;
 
 				await notion.pages.update({
