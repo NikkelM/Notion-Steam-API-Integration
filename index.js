@@ -15,6 +15,7 @@ async function getSteamAppInfo(appId) {
 		let response = await steamClient.getProductInfo([appId], [], true);
 
 		const result = response.apps[appId].appinfo;
+
 		resolve(result);
 	});
 }
@@ -66,22 +67,23 @@ async function findChangesAndAddDetails() {
 				// Get info about this game from the Steam API
 				const appInfo = await getSteamAppInfo(steamAppId).then((appInfo) => { return appInfo; });
 
-				const gameTitle = appInfo.common.name ?? "CouldNotFetchTitle";
-				const coverUrl = `https://cdn.cloudflare.steamstatic.com/steam/apps/${steamAppId}/${appInfo.common.header_image.english}` ?? "https://www.metal-hammer.de/wp-content/uploads/2022/11/22/19/steam-logo.jpg";
+				const gameTitle = appInfo.common.name ? appInfo.common.name : "CouldNotFetchTitle";
+
+				const coverUrl = appInfo.common.header_image?.english ? `https://cdn.cloudflare.steamstatic.com/steam/apps/${steamAppId}/${appInfo.common.header_image.english}` : "https://www.metal-hammer.de/wp-content/uploads/2022/11/22/19/steam-logo.jpg";
 
 				let releaseDate;
 				if (appInfo.common.original_release_date) {
-					releaseDate = new Date(parseInt(appInfo.common.original_release_date) * 1000).toISOString().split("T")[0]
+					releaseDate = new Date(parseInt(appInfo.common.original_release_date) * 1000).toISOString().split("T")[0];
 				} else if (appInfo.common.steam_release_date) {
-					releaseDate = new Date(parseInt(appInfo.common.steam_release_date) * 1000).toISOString().split("T")[0]
+					releaseDate = new Date(parseInt(appInfo.common.steam_release_date) * 1000).toISOString().split("T")[0];
 				} else if (appInfo.common.store_asset_mtime) {
-					releaseDate = new Date(parseInt(appInfo.common.store_asset_mtime) * 1000).toISOString().split("T")[0]
+					releaseDate = new Date(parseInt(appInfo.common.store_asset_mtime) * 1000).toISOString().split("T")[0];
 				} else {
-					releaseDate = null;
+					releaseDate = new Date(0).toISOString().split("T")[0];
 				}
 
-				const steamReviewScore = parseInt(appInfo.common.review_percentage) / 100 ?? null;
-				const tags = await getSteamTagNames(appInfo.common.store_tags).then((tags) => { return tags; }) ?? null;
+				const steamReviewScore = appInfo.common.review_percentage ? parseInt(appInfo.common.review_percentage) / 100 : null;
+				const tags = appInfo.common.store_tags ? await getSteamTagNames(appInfo.common.store_tags).then((tags) => { return tags; }) : ["No tags found"];
 
 				await notion.pages.update({
 					page_id: pageId,
