@@ -38,8 +38,8 @@ async function getSteamTagNames(storeTags) {
 // ---------- Notion API ----------
 
 const notion = new Client({ auth: SECRETS.NOTION_KEY });
-
 const databaseId = SECRETS.NOTION_DATABASE_ID;
+const updateInterval = 60000; // 1 minute
 
 // Create an empty local store of all games in the database if it doesn't exist
 if (!fs.existsSync('./gamesInDatabase.json')) {
@@ -50,6 +50,7 @@ if (!fs.existsSync('./gamesInDatabase.json')) {
 let gamesInDatabase = JSON.parse(fs.readFileSync('./gamesInDatabase.json'));
 
 async function findChangesAndAddDetails() {
+	console.log();
 	console.log("Looking for changes in Notion database...");
 
 	// Get the games currently in the database
@@ -59,21 +60,28 @@ async function findChangesAndAddDetails() {
 	for (const [pageId, steamAppId] of Object.entries(currGamesInDatabase)) {
 		// If this game hasn't been seen before
 		if (!(pageId in gamesInDatabase)) {
-			console.log("New game found for pageId: " + pageId);
-			// Add this game to the local store of all games
-			gamesInDatabase[pageId] = steamAppId;
-			fs.writeFileSync('gamesInDatabase.json', JSON.stringify(gamesInDatabase));
-			// Get info about this game from the Steam API
-			const appInfo = await getSteamAppInfo(steamAppId).then((appInfo) => { return appInfo; });
+			try {
+				console.log("New game found with Steam App Id: " + steamAppId);
 
-			const gameTitle = appInfo.common.name;
-			console.log("Game title: " + gameTitle);
+				// Get info about this game from the Steam API
+				const appInfo = await getSteamAppInfo(steamAppId).then((appInfo) => { return appInfo; });
 
-			const coverUrl = `https://cdn.cloudflare.steamstatic.com/steam/apps/${steamAppId}/header.jpg`;
-			const releaseDate = new Date(parseInt(appInfo.common.steam_release_date) * 1000).toISOString().split("T")[0];
-			const tags = await getSteamTagNames(appInfo.common.store_tags).then((tags) => { return tags; });
+				const gameTitle = appInfo.common.name ?? "CouldNotFetchTitle";
+				const coverUrl = `https://cdn.cloudflare.steamstatic.com/steam/apps/${steamAppId}/header.jpg`;
 
-			(async () => {
+				let releaseDate;
+				if (appInfo.common.original_release_date) {
+					releaseDate = new Date(parseInt(appInfo.common.original_release_date) * 1000).toISOString().split("T")[0]
+				} else if (appInfo.common.steam_release_date) {
+					releaseDate = new Date(parseInt(appInfo.common.steam_release_date) * 1000).toISOString().split("T")[0]
+				} else if (appInfo.common.store_asset_mtime) {
+					releaseDate = new Date(parseInt(appInfo.common.store_asset_mtime) * 1000).toISOString().split("T")[0]
+				} else {
+					releaseDate = null;
+				}
+
+				const tags = await getSteamTagNames(appInfo.common.store_tags).then((tags) => { return tags; }) ?? null;
+
 				await notion.pages.update({
 					page_id: pageId,
 					properties: {
@@ -110,12 +118,20 @@ async function findChangesAndAddDetails() {
 						}
 					}
 				});
-			})();
+
+				// Add this game to the local store of all games
+				// Do this after all the rest to make sure we don't add a game to the local store if something goes wrong
+				gamesInDatabase[pageId] = steamAppId;
+				fs.writeFileSync('gamesInDatabase.json', JSON.stringify(gamesInDatabase));
+			} catch (error) {
+				console.error(error);
+			}
 		}
 	}
 
-	// Run this method every 10 seconds
-	setTimeout(main, 10000)
+	console.log("Done looking for changes in Notion database. Looking again in " + updateInterval / 1000 + " seconds.");
+	// Run this method every updateInterval milliseconds
+	setTimeout(main, updateInterval);
 }
 
 
