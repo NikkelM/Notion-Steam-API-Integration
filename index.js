@@ -80,6 +80,7 @@ async function findChangesAndAddDetails() {
 					releaseDate = null;
 				}
 
+				const steamReviewScore = parseInt(appInfo.common.review_percentage)/100 ?? null;
 				const tags = await getSteamTagNames(appInfo.common.store_tags).then((tags) => { return tags; }) ?? null;
 
 				await notion.pages.update({
@@ -102,6 +103,9 @@ async function findChangesAndAddDetails() {
 						},
 						"Store page": {
 							"url": `https://store.steampowered.com/app/${steamAppId}`
+						},
+						"Steam Reviews": {
+							"number": steamReviewScore
 						},
 						"Tags": {
 							"multi_select": tags.map((tag) => {
