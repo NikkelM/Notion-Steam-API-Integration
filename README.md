@@ -1,6 +1,6 @@
 # Notion Steam API Integration
 
-This Notion integration is meant to be used with databases containing Steam games.
+Notion integration for automatically updating database entries containing a `Steam App Id` with data from the Steam API.
 Given a `Steam App Id`, the integration fetches data from the Steam API and fills in a number of database fields with the corresponding data.
 
 ## Setup
