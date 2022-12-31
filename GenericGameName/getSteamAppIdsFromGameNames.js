@@ -12,8 +12,6 @@ import stringSimilarity from 'string-similarity';
 console.log("Loading config.json...");
 import CONFIG from './config.json' assert { type: "json" };
 
-const platformName = CONFIG.platformName;
-
 // ----- Other -----
 
 // Create the output directory if it doesn't exist
@@ -101,7 +99,7 @@ console.log("Creating .csv files with default values for Notion import...");
 // Create a .csv to import to Notion for the full matches
 let csvFullMatch = "Steam App ID,Platform,Status,My Review\n";
 for (const game in steamIDsFullMatch) {
-	csvFullMatch += `${steamIDsFullMatch[game]},${platformName},Backlog,Unreviewed\n`;
+	csvFullMatch += `${steamIDsFullMatch[game]},${CONFIG.platformName},Backlog,Unreviewed\n`;
 }
 fs.writeFileSync('./output/steamAppIds_fullMatch.csv', csvFullMatch);
 
@@ -109,6 +107,6 @@ fs.writeFileSync('./output/steamAppIds_fullMatch.csv', csvFullMatch);
 // Make sure to clean this up before importing to Notion if you want to make sure the games are correct
 let csvBestMatch = "Steam App ID,Platform,Status,My Review\n";
 for (const game in steamIDsBestMatch) {
-	csvBestMatch += `${steamIDsBestMatch[game].appId},${platformName},Backlog,Unreviewed\n`;
+	csvBestMatch += `${steamIDsBestMatch[game].appId},${CONFIG.platformName},Backlog,Unreviewed\n`;
 }
 fs.writeFileSync('./output/steamAppIds_bestMatch.csv', csvBestMatch);
