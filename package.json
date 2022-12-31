@@ -6,6 +6,7 @@
 	"main": "index.js",
 	"dependencies": {
 		"@notionhq/client": "^1.0.1",
-		"steam-user": "^4.26.1"
+		"steam-user": "^4.26.1",
+		"string-similarity": "^4.0.4"
 	}
 }
