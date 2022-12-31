@@ -1,3 +1,6 @@
+// Suppresses the warning about importing json files being unstable
+process.removeAllListeners('warning');
+
 import { Client } from '@notionhq/client';
 import SteamUser from 'steam-user';
 import fs from 'fs';
@@ -42,13 +45,17 @@ const notion = new Client({ auth: SECRETS.NOTION_KEY });
 const databaseId = SECRETS.NOTION_DATABASE_ID;
 const updateInterval = 60000; // 1 minute
 
+// Create the backend/utils directory if it doesn't exist
+if (!fs.existsSync('./backend')) {
+	fs.mkdirSync('./backend');
+}
 // Create an empty local store of all games in the database if it doesn't exist
-if (!fs.existsSync('./gamesInDatabase.json')) {
-	fs.writeFileSync('./gamesInDatabase.json', JSON.stringify({}));
+if (!fs.existsSync('./backend/gamesInDatabase.json')) {
+	fs.writeFileSync('./backend/gamesInDatabase.json', JSON.stringify({}));
 }
 
 // A JSON Object to hold all games in the Notion database
-let gamesInDatabase = JSON.parse(fs.readFileSync('./gamesInDatabase.json'));
+let gamesInDatabase = JSON.parse(fs.readFileSync('./backend/gamesInDatabase.json'));
 
 async function findChangesAndAddDetails() {
 	console.log();
@@ -71,6 +78,7 @@ async function findChangesAndAddDetails() {
 				const gameTitle = appInfo.common.name ? appInfo.common.name : "CouldNotFetchTitle";
 
 				// Get the URL's for the cover image and icon. Default values have a Steam theme
+				// TODO: Don't set it at all if not found, to not overwrite potential custom images
 				const coverUrl = appInfo.common.header_image?.english ? `https://cdn.cloudflare.steamstatic.com/steam/apps/${steamAppId}/${appInfo.common.header_image.english}` : "https://www.metal-hammer.de/wp-content/uploads/2022/11/22/19/steam-logo.jpg";
 				const iconUrl = appInfo.common.icon ? `https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/${steamAppId}/${appInfo.common.icon}.jpg` : "https://iconarchive.com/download/i75918/martz90/circle/steam.ico";
 
@@ -143,7 +151,7 @@ async function findChangesAndAddDetails() {
 				// Add this game to the local store of all games
 				// Do this after all the rest to make sure we don't add a game to the local store if something goes wrong
 				gamesInDatabase[pageId] = steamAppId;
-				fs.writeFileSync('gamesInDatabase.json', JSON.stringify(gamesInDatabase));
+				fs.writeFileSync('./backend/gamesInDatabase.json', JSON.stringify(gamesInDatabase));
 			} catch (error) {
 				console.error(error);
 			}

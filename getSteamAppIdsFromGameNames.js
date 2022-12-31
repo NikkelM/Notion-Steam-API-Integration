@@ -1,4 +1,4 @@
-// Removes the warning about the fetch API being unstable
+// Suppresses the warning about the fetch API being unstable
 process.removeAllListeners('warning');
 
 import fs from 'fs';
