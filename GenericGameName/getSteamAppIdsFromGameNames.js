@@ -7,8 +7,14 @@ import stringSimilarity from 'string-similarity';
 
 // ---------- Setup ----------
 
-const platformName = "Epic Games";
-console.log("Assuming the platform of the games is called \"" + platformName + "\". If this is not correct, change the variable \"platformName\" in the script. This is only used for the resulting .csv files.\n")
+// ----- Config -----
+
+console.log("Loading config.json...");
+import CONFIG from './config.json' assert { type: "json" };
+
+const platformName = CONFIG.platformName;
+
+// ----- Other -----
 
 // Create the output directory if it doesn't exist
 if (!fs.existsSync('./output')) {
