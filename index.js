@@ -69,7 +69,7 @@ async function findChangesAndAddDetails() {
 		// If this game hasn't been seen before
 		if (!(pageId in gamesInDatabase)) {
 			try {
-				console.log("New game found with Steam App Id: " + steamAppId);
+				console.log("New game found with Steam App ID: " + steamAppId);
 
 				// Get info about this game from the Steam API
 				const appInfo = await getSteamAppInfo(steamAppId).then((appInfo) => { return appInfo; });

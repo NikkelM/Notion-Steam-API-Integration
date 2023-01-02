@@ -1,7 +1,7 @@
 # Notion Steam API Integration
 
-Notion integration for automatically updating database entries containing a `Steam App Id` with data from the Steam API.
-Given a `Steam App Id`, the integration fetches data from the Steam API and fills in a number of database fields with the corresponding data.
+Notion integration for automatically updating database entries containing a `Steam App ID` with data from the Steam API.
+Given a `Steam App ID`, the integration fetches data from the Steam API and fills in a number of pre-determined database fields with the corresponding data.
 
 ## Setup
 
@@ -11,7 +11,7 @@ Start by installing the needed dependencies:
 npm install
 ```
 
-Continue with creating a `secrets.json` file in the root folder that will hold your Notion integration's secret key as well as the id of your database, in the following format:
+Continue with creating a `secrets.json` file in the root folder that will hold your Notion integration's secret key as well as the ID of your database, in the following format:
 
 ```json
 {
@@ -31,18 +31,18 @@ The integration makes a number of assumptions about your database's structure, m
 
 | Property name | Data type |
 |---|---|
-| Release | Date |
-| Store page | URL |
-| Steam Reviews | Number shown as percentage |
-| Tags | Multi-select |
+| Release | `Date` |
+| Store page | `URL` |
+| Steam Reviews | `Number`, shown as percentage |
+| Tags | `Multi-select` |
 
-Additionally, the `Title` of a database entry must be named `Name`.
+Additionally, the `Title` property of your database must be named `Name`.
 
 ## Usage
 
 Whenever you want to update the database with new (Steam) games, simply run `node index.js`.
-The integration will search the database for new entries that have the `Steam App Id` field set and then fetch the corresponding data from the Steam API.
+The integration will search the database for new entries that have the `Steam App ID` field set and then fetch the corresponding data from the Steam API.
 Following this, the database entry will be updated with cleaned up data from the API, such as Steam user review scores and the game's tags.
 
 You are able to have the integration running in the background whilst editing the database.
-You can also have database entries without a `Steam App Id` set, which will be ignored by the integration.
+You can also have database entries without the `Steam App ID` set, these will be ignored by the integration.
