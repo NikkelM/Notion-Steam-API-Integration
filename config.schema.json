@@ -10,12 +10,12 @@
 			"default": "config.schema.json"
 		},
 		"notionIntegrationKey": {
-			"description": "The secret integration key for your Notion integration. Find it on https://www.notion.so/my-integrations",
+			"description": "The secret integration key for your Notion integration. Find it on your integration dashboard after creating a new integration on https://www.notion.so/my-integrations",
 			"type": "string",
 			"default": ""
 		},
 		"notionDatabaseId": {
-			"description": "The database ID for the Notion Steam API integration.",
+			"description": "The ID of the database you want to run the integration on. You can find the ID in the URL of your database, e.g. https://www.notion.so/myworkspace/your-database-id",
 			"type": "string",
 			"default": ""
 		}
