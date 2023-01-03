@@ -83,7 +83,7 @@ console.log("Logging into Steam...");
 steamClient.logOn();
 
 async function getSteamAppInfo(appId) {
-	return new Promise(async (resolve, reject) => {
+	return new Promise(async (resolve) => {
 		// Passing true as the third argument automatically requests access tokens, which are required for some apps
 		let response = await steamClient.getProductInfo([appId], [], true);
 
@@ -98,7 +98,7 @@ async function getSteamTagNames(storeTags) {
 		return storeTags[key];
 	});
 
-	return new Promise(async (resolve, reject) => {
+	return new Promise(async (resolve) => {
 		let response = await steamClient.getStoreTagNames("english", tagIds);
 
 		const result = Object.keys(response.tags).map(function (key) {
@@ -113,7 +113,7 @@ async function getSteamTagNames(storeTags) {
 
 const notion = new Client({ auth: CONFIG.notionIntegrationKey });
 const databaseId = CONFIG.notionDatabaseId;
-const updateInterval = 60000; // 1 minute
+const updateInterval = CONFIG.updateInterval;
 
 async function findChangesAndAddDetails() {
 	console.log("Looking for changes in Notion database...");

@@ -19,6 +19,12 @@
 			"type": "string",
 			"default": ""
 		},
+		"updateInterval": {
+			"description": "The interval in which the integration will check for updates to your Notion database. The value is in milliseconds. Must be at least 60000 (1 minute).",
+			"type": "number",
+			"default": 60000,
+			"minimum": 60000
+		},
 		"forceReset": {
 			"description": "If true, the integration will reset the local database, fetch all Steam App ID's from the Notion database and refresh all game properties. This may take longer, depending on the size of your Notion database.",
 			"type": "boolean",
@@ -27,7 +33,8 @@
 	},
 	"required": [
 		"notionIntegrationKey",
-		"notionDatabaseId"
+		"notionDatabaseId",
+		"updateInterval"
 	],
 	"additionalProperties": false
 }
