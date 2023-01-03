@@ -236,7 +236,6 @@ async function getGamesFromDatabase() {
 	async function getPageOfGames(cursor) {
 		// While there are more pages left in the query, get pages from the database. 
 		const currentPages = await queryDatabase(cursor);
-		console.log(currentPages);
 	
 		currentPages.results.forEach(page => games[page.id] = page.properties["Steam App ID"].number);
 	
