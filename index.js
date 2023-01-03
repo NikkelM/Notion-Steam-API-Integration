@@ -51,13 +51,27 @@ try {
 	process.exit(1);
 }
 
-// ---------- Steam API ----------
+// ---------- Main ----------
+
+function main() {
+	findChangesAndAddDetails().catch(console.error);
+}
 
 let steamClient = new SteamUser();
+
+// We need to wait until we are logged into Steam before we can use the API
+steamClient.on('loggedOn', (async () => {
+	console.log("Successfully logged into Steam.\n");
+	main();
+}));
+
+// ---------- Steam API ----------
+
+console.log("Logging into Steam...");
 steamClient.logOn();
 
 async function getSteamAppInfo(appId) {
-	return new Promise(async (resolve) => {
+	return new Promise(async (resolve, reject) => {
 		// Passing true as the third argument automatically requests access tokens, which are required for some apps
 		let response = await steamClient.getProductInfo([appId], [], true);
 
@@ -72,7 +86,7 @@ async function getSteamTagNames(storeTags) {
 		return storeTags[key];
 	});
 
-	return new Promise(async (resolve) => {
+	return new Promise(async (resolve, reject) => {
 		let response = await steamClient.getStoreTagNames("english", tagIds);
 
 		const result = Object.keys(response.tags).map(function (key) {
@@ -197,51 +211,46 @@ async function findChangesAndAddDetails() {
 	setTimeout(main, updateInterval);
 }
 
-
-function main() {
-	findChangesAndAddDetails().catch(console.error);
-}
-
-(async () => {
-	main();
-})();
-
 // Get a paginated list of Games currently in the database. 
 async function getGamesFromDatabase() {
 
 	const games = {}
 
 	async function getPageOfGames(cursor) {
-		let requestPayload = "";
-		// Create the request payload based on the presense of a start_cursor
-		if (cursor == undefined) {
-			requestPayload = {
-				path: 'databases/' + databaseId + '/query',
-				method: 'POST',
-			}
-		} else {
-			requestPayload = {
-				path: 'databases/' + databaseId + '/query',
-				method: 'POST',
-				body: {
-					"start_cursor": cursor
-				}
-			}
-		}
 		// While there are more pages left in the query, get pages from the database. 
-		const currentPages = await notion.request(requestPayload);
+		const currentPages = await queryDatabase(cursor);
 
-		for (const page of currentPages.results) {
-			// If the page has a set Steam App ID, we can work with it, so we save it to the local cache
-			if (page.properties["Steam App ID"].number !== null) {
-				games[page.id] = page.properties["Steam App ID"].number;
-			}
-		}
+		currentPages.results.forEach(page => games[page.id] = page.properties["Steam App ID"].number);
+
 		if (currentPages.has_more) {
 			await getPageOfGames(currentPages.next_cursor)
 		}
-
 	}
+
 	await getPageOfGames();
 	return games;
-}; 
+};
+
+async function queryDatabase(cursor) {
+	return await notion.databases.query({
+		database_id: databaseId,
+		page_size: 100,
+		start_cursor: cursor,
+		filter: {
+			"and": [
+				{
+					"timestamp": "last_edited_time",
+					"last_edited_time": {
+						"after": "2023-01-01"
+					}
+				},
+				{
+					property: "Steam App ID",
+					"number": {
+						"is_not_empty": true
+					}
+				}
+			]
+		}
+	});
+}
