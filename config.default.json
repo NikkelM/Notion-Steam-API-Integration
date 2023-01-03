@@ -1,0 +1,5 @@
+{
+	"$schema": "config.schema.json",
+	"notionIntegrationKey": "<secretKey>",
+	"notionDatabaseId": "<databaseId>"
+}

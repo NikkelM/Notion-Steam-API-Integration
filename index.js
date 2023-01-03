@@ -2,9 +2,8 @@
 
 import { Client } from '@notionhq/client';
 import SteamUser from 'steam-user';
+import jsonschema from 'jsonschema';
 import fs from 'fs';
-
-import SECRETS from './secrets.json' assert { type: "json" };
 
 // ---------- Setup ----------
 
@@ -14,13 +13,51 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// ----- Backend -----
+
+// Create the backend/utils directory if it doesn't exist
+if (!fs.existsSync(__dirname + '/backend')) {
+	fs.mkdirSync(__dirname + '/backend');
+}
+// Create an empty local store of all games in the database if it doesn't exist
+if (!fs.existsSync(__dirname + '/backend/gamesInDatabase.json')) {
+	fs.writeFileSync(__dirname + '/backend/gamesInDatabase.json', JSON.stringify({}, null, 2));
+}
+
+// ----- Config -----
+
+try {
+	let configFileName;
+	if (fs.existsSync(__dirname + '/config.json')) {
+		console.log("Loading configuration file \"config.json\"...");
+		configFileName = 'config.json';
+	} else if (fs.existsSync(__dirname + '/config.default.json')) {
+		console.log("!!! No custom configuration file found! Loading default configuration file \"config.default.json\"...");
+		configFileName = 'config.default.json';
+	}
+	var CONFIG = JSON.parse(fs.readFileSync(__dirname + '/' + configFileName));
+} catch (error) {
+	console.error("Error loading configuration file: " + error);
+	process.exit(1);
+}
+
+// Validate the config file against the schema
+console.log("Validating configuration file...\n");
+try {
+	const validator = new jsonschema.Validator();
+	validator.validate(CONFIG, JSON.parse(fs.readFileSync(__dirname + '/config.schema.json')), { throwError: true });
+} catch (error) {
+	console.error("Error validating configuration file: " + error);
+	process.exit(1);
+}
+
 // ---------- Steam API ----------
 
 let steamClient = new SteamUser();
 steamClient.logOn();
 
 async function getSteamAppInfo(appId) {
-	return new Promise(async (resolve, reject) => {
+	return new Promise(async (resolve) => {
 		// Passing true as the third argument automatically requests access tokens, which are required for some apps
 		let response = await steamClient.getProductInfo([appId], [], true);
 
@@ -35,7 +72,7 @@ async function getSteamTagNames(storeTags) {
 		return storeTags[key];
 	});
 
-	return new Promise(async (resolve, reject) => {
+	return new Promise(async (resolve) => {
 		let response = await steamClient.getStoreTagNames("english", tagIds);
 
 		const result = Object.keys(response.tags).map(function (key) {
@@ -48,24 +85,14 @@ async function getSteamTagNames(storeTags) {
 
 // ---------- Notion API ----------
 
-const notion = new Client({ auth: SECRETS.NOTION_KEY });
-const databaseId = SECRETS.NOTION_DATABASE_ID;
+const notion = new Client({ auth: CONFIG.notionIntegrationKey });
+const databaseId = CONFIG.notionDatabaseId;
 const updateInterval = 60000; // 1 minute
-
-// Create the backend/utils directory if it doesn't exist
-if (!fs.existsSync(__dirname + '/backend')) {
-	fs.mkdirSync(__dirname + '/backend');
-}
-// Create an empty local store of all games in the database if it doesn't exist
-if (!fs.existsSync(__dirname + '/backend/gamesInDatabase.json')) {
-	fs.writeFileSync(__dirname + '/backend/gamesInDatabase.json', JSON.stringify({}));
-}
 
 // A JSON Object to hold all games in the Notion database
 let gamesInDatabase = JSON.parse(fs.readFileSync(__dirname + '/backend/gamesInDatabase.json'));
 
 async function findChangesAndAddDetails() {
-	console.log();
 	console.log("Looking for changes in Notion database...");
 
 	// Get the games currently in the database
@@ -165,7 +192,7 @@ async function findChangesAndAddDetails() {
 		}
 	}
 
-	console.log("Done looking for changes in Notion database. Looking again in " + updateInterval / 1000 + " seconds.");
+	console.log("Done looking for changes in Notion database. Looking again in " + updateInterval / 1000 + " seconds.\n");
 	// Run this method every updateInterval milliseconds
 	setTimeout(main, updateInterval);
 }

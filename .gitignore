@@ -1,9 +1,7 @@
 # Custom
 
-**secrets.json
+/config.json
 backend
-input
-output
 dev
 
 # Logs
