@@ -3,7 +3,7 @@ const originalEmit = process.emit;
 process.emit = function (name, data, ...args) {
 	if (name === `warning`) return false;
 	return originalEmit.apply(process, arguments);
-};
+}; 
 
 // ---------- Imports ----------
 
@@ -12,6 +12,14 @@ import SteamUser from 'steam-user';
 import fs from 'fs';
 
 import SECRETS from './secrets.json' assert { type: "json" };
+
+// ---------- Setup ----------
+
+// Utility for getting the directory of the current file
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // ---------- Steam API ----------
 
@@ -52,16 +60,16 @@ const databaseId = SECRETS.NOTION_DATABASE_ID;
 const updateInterval = 60000; // 1 minute
 
 // Create the backend/utils directory if it doesn't exist
-if (!fs.existsSync('./backend')) {
-	fs.mkdirSync('./backend');
+if (!fs.existsSync(__dirname + '/backend')) {
+	fs.mkdirSync(__dirname + '/backend');
 }
 // Create an empty local store of all games in the database if it doesn't exist
-if (!fs.existsSync('./backend/gamesInDatabase.json')) {
-	fs.writeFileSync('./backend/gamesInDatabase.json', JSON.stringify({}));
+if (!fs.existsSync(__dirname + '/backend/gamesInDatabase.json')) {
+	fs.writeFileSync(__dirname + '/backend/gamesInDatabase.json', JSON.stringify({}));
 }
 
 // A JSON Object to hold all games in the Notion database
-let gamesInDatabase = JSON.parse(fs.readFileSync('./backend/gamesInDatabase.json'));
+let gamesInDatabase = JSON.parse(fs.readFileSync(__dirname + '/backend/gamesInDatabase.json'));
 
 async function findChangesAndAddDetails() {
 	console.log();
@@ -157,7 +165,7 @@ async function findChangesAndAddDetails() {
 				// Add this game to the local store of all games
 				// Do this after all the rest to make sure we don't add a game to the local store if something goes wrong
 				gamesInDatabase[pageId] = steamAppId;
-				fs.writeFileSync('./backend/gamesInDatabase.json', JSON.stringify(gamesInDatabase, null, 2));
+				fs.writeFileSync(__dirname + '/backend/gamesInDatabase.json', JSON.stringify(gamesInDatabase, null, 2));
 			} catch (error) {
 				console.error(error);
 			}
