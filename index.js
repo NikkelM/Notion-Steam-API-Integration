@@ -13,17 +13,6 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// ----- Backend -----
-
-// Create the backend/utils directory if it doesn't exist
-if (!fs.existsSync(__dirname + '/backend')) {
-	fs.mkdirSync(__dirname + '/backend');
-}
-// Create an empty local store of all games in the database if it doesn't exist
-if (!fs.existsSync(__dirname + '/backend/gamesInDatabase.json')) {
-	fs.writeFileSync(__dirname + '/backend/gamesInDatabase.json', JSON.stringify({}, null, 2));
-}
-
 // ----- Config -----
 
 try {
@@ -51,13 +40,47 @@ try {
 	process.exit(1);
 }
 
-// ---------- Steam API ----------
+// ----- Local Database -----
+
+// Create the backend/utils directory if it doesn't exist
+if (!fs.existsSync(__dirname + '/backend')) {
+	fs.mkdirSync(__dirname + '/backend');
+}
+// Create an empty local store of all games in the database if it doesn't exist
+if (!fs.existsSync(__dirname + '/backend/localDatabase.json')) {
+	fs.writeFileSync(__dirname + '/backend/localDatabase.json', JSON.stringify({}, null, 2));
+}
+
+// A JSON Object to hold all games in the Notion database
+let localDatabase = JSON.parse(fs.readFileSync(__dirname + '/backend/localDatabase.json'));
+
+if (localDatabase.lastUpdatedAt) {
+	console.log(`Local database was last updated at ${localDatabase.lastUpdatedAt} UTC.\n`);
+} else {
+	localDatabase.lastUpdatedAt = new Date().toISOString();
+	console.log("Successfully initialized local database.\n");
+}
+// ---------- Main ----------
+
+function main() {
+	findChangesAndAddDetails().catch(console.error);
+}
 
 let steamClient = new SteamUser();
+
+// We need to wait until we are logged into Steam before we can use the API
+steamClient.on('loggedOn', (async () => {
+	console.log("Successfully logged into Steam.\n");
+	main();
+}));
+
+// ---------- Steam API ----------
+
+console.log("Logging into Steam...");
 steamClient.logOn();
 
 async function getSteamAppInfo(appId) {
-	return new Promise(async (resolve) => {
+	return new Promise(async (resolve, reject) => {
 		// Passing true as the third argument automatically requests access tokens, which are required for some apps
 		let response = await steamClient.getProductInfo([appId], [], true);
 
@@ -72,7 +95,7 @@ async function getSteamTagNames(storeTags) {
 		return storeTags[key];
 	});
 
-	return new Promise(async (resolve) => {
+	return new Promise(async (resolve, reject) => {
 		let response = await steamClient.getStoreTagNames("english", tagIds);
 
 		const result = Object.keys(response.tags).map(function (key) {
@@ -89,21 +112,22 @@ const notion = new Client({ auth: CONFIG.notionIntegrationKey });
 const databaseId = CONFIG.notionDatabaseId;
 const updateInterval = 60000; // 1 minute
 
-// A JSON Object to hold all games in the Notion database
-let gamesInDatabase = JSON.parse(fs.readFileSync(__dirname + '/backend/gamesInDatabase.json'));
-
 async function findChangesAndAddDetails() {
 	console.log("Looking for changes in Notion database...");
 
-	// Get the games currently in the database
-	const currGamesInDatabase = await getGamesFromDatabase();
+	// Update the last updated timestamp
+	// Do this before fetching to make sure we don't miss changes made between now and fetching new properties below
+	const newLastUpdatedAt = new Date().toISOString();
 
-	// Iterate over the current games and compare them to games in our local store (gamesInDatabase)
-	for (const [pageId, steamAppId] of Object.entries(currGamesInDatabase)) {
+	// Get the games currently in the database
+	const newGamesInNotionDatabase = await getGamesFromDatabase();
+
+	// Iterate over the current games and compare them to games in our local store (localDatabase)
+	for (const [pageId, steamAppId] of Object.entries(newGamesInNotionDatabase)) {
 		// If this game hasn't been seen before
-		if (!(pageId in gamesInDatabase)) {
+		if (!(pageId in localDatabase)) {
 			try {
-				console.log("New game found with Steam App ID: " + steamAppId);
+				console.log(`New game found with Steam App ID: ${steamAppId}`);
 
 				// Get info about this game from the Steam API
 				const appInfo = await getSteamAppInfo(steamAppId).then((appInfo) => { return appInfo; });
@@ -184,27 +208,20 @@ async function findChangesAndAddDetails() {
 
 				// Add this game to the local store of all games
 				// Do this after all the rest to make sure we don't add a game to the local store if something goes wrong
-				gamesInDatabase[pageId] = steamAppId;
-				fs.writeFileSync(__dirname + '/backend/gamesInDatabase.json', JSON.stringify(gamesInDatabase, null, 2));
+				localDatabase[pageId] = steamAppId;
 			} catch (error) {
 				console.error(error);
 			}
 		}
 	}
+	localDatabase.lastUpdatedAt = newLastUpdatedAt;
+	// Write the updated local store to disk
+	fs.writeFileSync(__dirname + '/backend/localDatabase.json', JSON.stringify(localDatabase, null, 2));
 
-	console.log("Done looking for changes in Notion database. Looking again in " + updateInterval / 1000 + " seconds.\n");
+	console.log(`Done looking for changes in Notion database. Looking again in ${updateInterval / 1000} seconds.\n`);
 	// Run this method every updateInterval milliseconds
 	setTimeout(main, updateInterval);
 }
-
-
-function main() {
-	findChangesAndAddDetails().catch(console.error);
-}
-
-(async () => {
-	main();
-})();
 
 // Get a paginated list of Games currently in the database. 
 async function getGamesFromDatabase() {
@@ -212,36 +229,41 @@ async function getGamesFromDatabase() {
 	const games = {}
 
 	async function getPageOfGames(cursor) {
-		let requestPayload = "";
-		// Create the request payload based on the presense of a start_cursor
-		if (cursor == undefined) {
-			requestPayload = {
-				path: 'databases/' + databaseId + '/query',
-				method: 'POST',
-			}
-		} else {
-			requestPayload = {
-				path: 'databases/' + databaseId + '/query',
-				method: 'POST',
-				body: {
-					"start_cursor": cursor
-				}
-			}
-		}
 		// While there are more pages left in the query, get pages from the database. 
-		const currentPages = await notion.request(requestPayload);
+		const currentPages = await queryDatabase(cursor);
 
-		for (const page of currentPages.results) {
-			// If the page has a set Steam App ID, we can work with it, so we save it to the local cache
-			if (page.properties["Steam App ID"].number !== null) {
-				games[page.id] = page.properties["Steam App ID"].number;
-			}
-		}
+		currentPages.results.forEach(page => games[page.id] = page.properties["Steam App ID"].number);
+
 		if (currentPages.has_more) {
 			await getPageOfGames(currentPages.next_cursor)
 		}
-
 	}
+
 	await getPageOfGames();
 	return games;
-}; 
+};
+
+// Fetch all pages from the database that have been edited since we last accessed the database, and that have a Steam App ID set
+async function queryDatabase(cursor) {
+	return await notion.databases.query({
+		database_id: databaseId,
+		page_size: 100,
+		start_cursor: cursor,
+		filter: {
+			"and": [
+				{
+					"timestamp": "last_edited_time",
+					"last_edited_time": {
+						"after": localDatabase.lastUpdatedAt
+					}
+				},
+				{
+					property: "Steam App ID",
+					"number": {
+						"is_not_empty": true
+					}
+				}
+			]
+		}
+	});
+}
