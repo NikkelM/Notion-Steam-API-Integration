@@ -1,5 +1,9 @@
 // Suppresses the warning about importing json files being unstable
-process.emit = function () { return false };
+const originalEmit = process.emit;
+process.emit = function (name, data, ...args) {
+	if (name === `warning`) return false;
+	return originalEmit.apply(process, arguments);
+};
 
 // ---------- Imports ----------
 
