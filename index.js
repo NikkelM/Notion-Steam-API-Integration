@@ -54,7 +54,6 @@ if (!fs.existsSync(__dirname + '/backend/localDatabase.json') || CONFIG.forceRes
 
 // A JSON Object to hold all games in the Notion database
 let localDatabase = JSON.parse(fs.readFileSync(__dirname + '/backend/localDatabase.json'));
-console.log(localDatabase)
 
 if (localDatabase.lastUpdatedAt) {
 	console.log(`Local database was last updated at ${localDatabase.lastUpdatedAt} UTC.\n`);
