@@ -51,7 +51,7 @@ The project provides a JSON validation schema for the required configuration fil
 The schema can be found in the `config.schema.json` file and used within your `config.json` by adding the following property:
 
 ```json
-"$schema": "./config.schema.json"
+"$schema": "config.schema.json"
 ```
 
 *NOTE: The script will test your provided `config.json` against this schema, so make sure your configuration is valid.*
