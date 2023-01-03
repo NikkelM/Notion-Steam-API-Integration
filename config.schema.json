@@ -21,7 +21,7 @@
 		},
 		"updateInterval": {
 			"description": "The interval in which the integration will check for updates to your Notion database. The value is in milliseconds. Must be at least 60000 (1 minute).",
-			"type": "number",
+			"type": "integer",
 			"default": 60000,
 			"minimum": 60000
 		},

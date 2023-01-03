@@ -83,6 +83,16 @@ The ID of the database you want to run the integration on. You can find the ID i
 </details>
 
 <details>
+<summary><code>updateInterval</code></summary>
+
+The interval in which the integration will check for updates to your Notion database. The value is in milliseconds. Must be at least 60000 (1 minute).
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `integer` | 60000 | Integers >= 60000 | Yes |
+</details>
+
+<details>
 <summary><code>forceReset</code></summary>
 
 If true, the integration will reset the local database, fetch all Steam App ID's from the Notion database and refresh all game properties. This may take longer, depending on the size of your Notion database.
