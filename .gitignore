@@ -3,6 +3,7 @@
 /config.json
 backend
 dev
+*.xcf
 
 # Logs
 logs
