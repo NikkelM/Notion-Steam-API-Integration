@@ -81,3 +81,13 @@ The ID of the database you want to run the integration on. You can find the ID i
 |---|---|---|---|
 | `string` | `""` | A valid Notion database ID | Yes |
 </details>
+
+<details>
+<summary><code>forceReset</code></summary>
+
+If true, the integration will reset the local database, fetch all Steam App ID's from the Notion database and refresh all game properties. This may take longer, depending on the size of your Notion database.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `boolean` | `false` | `true` or `false` | No |
+</details>
