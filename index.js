@@ -46,18 +46,21 @@ try {
 if (!fs.existsSync(__dirname + '/backend')) {
 	fs.mkdirSync(__dirname + '/backend');
 }
-// Create an empty local store of all games in the database if it doesn't exist
-if (!fs.existsSync(__dirname + '/backend/localDatabase.json')) {
+// Create an empty local store of all games in the database if it doesn't exist, or the user wants to reset it
+if (!fs.existsSync(__dirname + '/backend/localDatabase.json') || CONFIG.forceReset) {
+	console.log("Initializing/Resetting local database...");
 	fs.writeFileSync(__dirname + '/backend/localDatabase.json', JSON.stringify({}, null, 2));
 }
 
 // A JSON Object to hold all games in the Notion database
 let localDatabase = JSON.parse(fs.readFileSync(__dirname + '/backend/localDatabase.json'));
+console.log(localDatabase)
 
 if (localDatabase.lastUpdatedAt) {
 	console.log(`Local database was last updated at ${localDatabase.lastUpdatedAt} UTC.\n`);
 } else {
-	localDatabase.lastUpdatedAt = new Date().toISOString();
+	localDatabase.lastUpdatedAt = new Date(0).toISOString();
+	console.log(localDatabase.lastUpdatedAt);
 	console.log("Successfully initialized local database.\n");
 }
 // ---------- Main ----------
