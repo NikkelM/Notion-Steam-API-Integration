@@ -1,15 +1,5 @@
 // Suppresses the warning about importing json files being unstable
-const originalEmit = process.emit;
-process.emit = function (name, data, ...args) {
-	if (
-		name === `warning` &&
-		typeof data === `object` &&
-		data.name === `ExperimentalWarning`
-	) {
-		return false;
-	}
-	return originalEmit.apply(process, arguments);
-};
+process.emit = function () { return false };
 
 // ---------- Imports ----------
 
@@ -163,7 +153,7 @@ async function findChangesAndAddDetails() {
 				// Add this game to the local store of all games
 				// Do this after all the rest to make sure we don't add a game to the local store if something goes wrong
 				gamesInDatabase[pageId] = steamAppId;
-				fs.writeFileSync('./backend/gamesInDatabase.json', JSON.stringify(gamesInDatabase));
+				fs.writeFileSync('./backend/gamesInDatabase.json', JSON.stringify(gamesInDatabase, null, 2));
 			} catch (error) {
 				console.error(error);
 			}
