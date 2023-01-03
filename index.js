@@ -1,10 +1,3 @@
-// Suppresses the warning about importing json files being unstable
-const originalEmit = process.emit;
-process.emit = function (name, data, ...args) {
-	if (name === `warning`) return false;
-	return originalEmit.apply(process, arguments);
-}; 
-
 // ---------- Imports ----------
 
 import { Client } from '@notionhq/client';
