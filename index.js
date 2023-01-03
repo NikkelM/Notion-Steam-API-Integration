@@ -220,7 +220,7 @@ async function findChangesAndAddDetails() {
 	// Write the updated local store to disk
 	fs.writeFileSync(__dirname + '/backend/localDatabase.json', JSON.stringify(localDatabase, null, 2));
 
-	console.log(`Done looking for changes in Notion database. Looking again in ${updateInterval / 1000} seconds.\n`);
+	console.log(`Done looking for changes in Notion database. Looking again in ${updateInterval / 60000} minute(s).\n`);
 	// Run this method every updateInterval milliseconds
 	setTimeout(main, updateInterval);
 }
