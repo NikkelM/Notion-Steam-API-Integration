@@ -1,5 +1,17 @@
 // Suppresses the warning about importing json files being unstable
-process.removeAllListeners('warning');
+const originalEmit = process.emit;
+process.emit = function (name, data, ...args) {
+	if (
+		name === `warning` &&
+		typeof data === `object` &&
+		data.name === `ExperimentalWarning`
+	) {
+		return false;
+	}
+	return originalEmit.apply(process, arguments);
+};
+
+// ---------- Imports ----------
 
 import { Client } from '@notionhq/client';
 import SteamUser from 'steam-user';
