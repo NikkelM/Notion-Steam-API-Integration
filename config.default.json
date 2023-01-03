@@ -1,5 +1,7 @@
 {
 	"$schema": "config.schema.json",
 	"notionIntegrationKey": "<secretKey>",
-	"notionDatabaseId": "<databaseId>"
+	"notionDatabaseId": "<databaseId>",
+	"resetLocalDatabase": false,
+	"forceRefresh": false
 }

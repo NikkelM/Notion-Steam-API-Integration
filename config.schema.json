@@ -18,6 +18,16 @@
 			"description": "The ID of the database you want to run the integration on. You can find the ID in the URL of your database, e.g. https://www.notion.so/myworkspace/your-database-id",
 			"type": "string",
 			"default": ""
+		},
+		"resetLocalDatabase": {
+			"description": "If true, the local database will be reset and all data will be re-fetched from Notion. This is useful if you think the local database may be out of sync with Notion, e.g. if you deleted some games (which is not recorded in the local database).",
+			"type": "boolean",
+			"default": false
+		},
+		"forceRefresh": {
+			"description": "If true, the integration will reset the local database, fetch all Steam ID's from the Notion database and refresh all game properties. This may take longer, depending on the size of your Notion database.",
+			"type": "boolean",
+			"default": false
 		}
 	},
 	"required": [
