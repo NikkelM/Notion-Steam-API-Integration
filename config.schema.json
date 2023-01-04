@@ -134,7 +134,36 @@
 							"type": "string",
 							"default": "Review Score"
 						}
-					}
+					},
+					"required": [
+						"enabled",
+						"notionProperty"
+					]
+				},
+				"tags": {
+					"description": "The user-defined tags of the game as they can be seen on the store page.",
+					"type": "object",
+					"default": {
+						"enabled": true,
+						"notionProperty": "Tags"
+					},
+					"additionalProperties": false,
+					"properties": {
+						"enabled": {
+							"description": "Whether or not the tags of the game should be set in the database.",
+							"type": "boolean",
+							"default": true
+						},
+						"notionProperty": {
+							"description": "The name of the Notion property to set the tags in. This field must be of type \"multi-select\".",
+							"type": "string",
+							"default": "Tags"
+						}
+					},
+					"required": [
+						"enabled",
+						"notionProperty"
+					]
 				}
 			}
 		}

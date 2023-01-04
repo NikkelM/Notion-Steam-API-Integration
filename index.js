@@ -215,8 +215,19 @@ async function findChangesAndAddDetails() {
 					}
 				}
 
-				// Parse the tags from the Steam API. If no tags are found, set a "No tags found" placeholder
-				const tags = appInfo.common.store_tags ? await getSteamTagNames(appInfo.common.store_tags).then((tags) => { return tags; }) : ["No tags found"];
+				if (CONFIG.notionProperties.tags?.enabled) {
+					// Parse the tags from the Steam API. If no tags are found, set a "No tags found" placeholder
+					const tags = appInfo.common.store_tags ? await getSteamTagNames(appInfo.common.store_tags).then((tags) => { return tags; }) : ["No tags found"];
+
+					properties[CONFIG.notionProperties.tags.notionProperty] = {
+						"multi_select": tags.map((tag) => {
+							return {
+								"name": tag
+							}
+						})
+					}
+				}
+
 
 				// Update the game's page in the database with the new info
 				await notion.pages.update({

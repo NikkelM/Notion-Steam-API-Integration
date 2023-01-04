@@ -20,6 +20,10 @@
 		"reviewScore": {
 			"enabled": true,
 			"notionProperty": "Review Score"
+		},
+		"tags": {
+			"enabled": true,
+			"notionProperty": "Tags"
 		}
 	}
 }
