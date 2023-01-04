@@ -345,3 +345,38 @@ The name of the Notion property to set the description in.
 |---|---|---|---|
 | `string` | `"Game Description"` | A valid Notion property name | Yes |
 </details>
+
+<details>
+<summary><code>storePage</code></summary>
+
+The URL to the store page of the game.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `object` | See item below | See sections below | No |
+
+```json
+"storePage": {
+	"enabled": true,
+	"notionProperty": "Store Page"
+}
+```
+
+<h3>Possible values</h3>
+
+<h4><code>enabled</code></h4>
+
+Whether or not the store page URL should be set in the database.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `boolean` | `true` | `true` or `false` | Yes |
+
+<h4><code>notionProperty</code></h4>
+
+The name of the Notion property to set the store page URL in.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `string` | `"Store Page"` | A valid Notion property name | Yes |
+</details>

@@ -210,6 +210,31 @@
 						"enabled",
 						"notionProperty"
 					]
+				},
+				"storePage": {
+					"description": "The URL to the store page of the game.",
+					"type": "object",
+					"default": {
+						"enabled": true,
+						"notionProperty": "Store Page"
+					},
+					"additionalProperties": false,
+					"properties": {
+						"enabled": {
+							"description": "Whether or not the store page URL should be set in the database.",
+							"type": "boolean",
+							"default": true
+						},
+						"notionProperty": {
+							"description": "The name of the Notion property to set the store page URL in.",
+							"type": "string",
+							"default": "Store Page"
+						}
+					},
+					"required": [
+						"enabled",
+						"notionProperty"
+					]
 				}
 			}
 		}
