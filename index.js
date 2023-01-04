@@ -93,9 +93,13 @@ async function getSteamAppInfoDirect(appId) {
 	return await fetch(`https://store.steampowered.com/api/appdetails?appids=${appId}`)
 		.then(response => response.json())
 		.then(data => {
-			return data[appId].data;
+			if (data[appId].success) {
+				return data[appId].data;
+			}
+			console.log(`Failed to get app info for app ${appId} from the Steam store API. It is likely that the app is not available in your region. Some info may still be available using the SteamUser API.`)
+			return {};
 		}
-	);
+		);
 }
 
 // Gets app info from the SteamUser API
@@ -165,6 +169,9 @@ async function findChangesAndAddDetails() {
 
 				if (CONFIG.gameProperties.gameName?.enabled) {
 					const gameTitle = appInfoDirect.name
+						? appInfoDirect.name
+						: appInfoSteamUser.common.name;
+
 					const propertyType = CONFIG.gameProperties.gameName.isPageTitle ? "title" : "rich_text";
 
 					properties[CONFIG.gameProperties.gameName.notionProperty] = {
@@ -181,7 +188,11 @@ async function findChangesAndAddDetails() {
 
 				if (CONFIG.gameProperties.coverImage) {
 					// Get the URL for the cover image. Default value has a Steam theme
-					const coverUrl = appInfoDirect.header_image ? appInfoDirect.header_image : "https://www.metal-hammer.de/wp-content/uploads/2022/11/22/19/steam-logo.jpg";
+					const coverUrl = appInfoDirect.header_image
+						? appInfoDirect.header_image
+						: (appInfoSteamUser.common.header_image?.english
+							? `https://cdn.cloudflare.steamstatic.com/steam/apps/${steamAppId}/${appInfoSteamUser.common.header_image.english}`
+							: "https://www.metal-hammer.de/wp-content/uploads/2022/11/22/19/steam-logo.jpg");
 
 					cover = {
 						"type": "external",
@@ -205,7 +216,7 @@ async function findChangesAndAddDetails() {
 				}
 
 				if (CONFIG.gameProperties.releaseDate?.enabled) {
-					// Get the release date. If no release date is available, set null
+					// Get the release date. If no release date is available, use the Unix epoch
 					// The releaseDate format from the Steam API is not in ISO format, so we use the SteamUser API instead
 					let releaseDate;
 					if (appInfoSteamUser.common.original_release_date) {
@@ -215,7 +226,7 @@ async function findChangesAndAddDetails() {
 					} else if (appInfoSteamUser.common.store_asset_mtime) {
 						releaseDate = new Date(parseInt(appInfoSteamUser.common.store_asset_mtime) * 1000).toISOString();
 					} else {
-						releaseDate = null;
+						releaseDate = new Date(0);
 					}
 
 					if (releaseDate && CONFIG.gameProperties.releaseDate.format == "date") {
@@ -255,7 +266,7 @@ async function findChangesAndAddDetails() {
 
 				if (CONFIG.gameProperties.gameDescription?.enabled) {
 					// Get the game description. If no description is available, set a null
-					const gameDescription = appInfoDirect.short_description ? appInfoDirect.short_description : null;
+					const gameDescription = appInfoDirect.short_description ? appInfoDirect.short_description : "";
 
 					properties[CONFIG.gameProperties.gameDescription.notionProperty] = {
 						"rich_text": [
@@ -287,6 +298,7 @@ async function findChangesAndAddDetails() {
 	}
 
 	// Only update the last updated time if there were no errors during execution
+	// This makes sure that we can find the games that had errors again the next time
 	if (!hadError) {
 		localDatabase.lastUpdatedAt = newLastUpdatedAt;
 	}
