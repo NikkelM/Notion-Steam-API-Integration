@@ -62,6 +62,7 @@ if (localDatabase.lastUpdatedAt) {
 	console.log(localDatabase.lastUpdatedAt);
 	console.log("Successfully initialized local database.\n");
 }
+
 // ---------- Main ----------
 
 function main() {
