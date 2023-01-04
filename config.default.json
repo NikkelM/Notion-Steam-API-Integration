@@ -16,6 +16,10 @@
 			"enabled": true,
 			"notionProperty": "Release Date",
 			"format": "date"
+		},
+		"reviewScore": {
+			"enabled": true,
+			"notionProperty": "Review Score"
 		}
 	}
 }

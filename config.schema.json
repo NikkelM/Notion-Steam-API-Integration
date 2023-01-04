@@ -114,6 +114,27 @@
 						"notionProperty",
 						"format"
 					]
+				},
+				"reviewScore": {
+					"description": "The user review score in percentage.",
+					"type": "object",
+					"default": {
+						"enabled": true,
+						"notionProperty": "Review Score"
+					},
+					"additionalProperties": false,
+					"properties": {
+						"enabled": {
+							"description": "Whether or not the user review score should be set in the database.",
+							"type": "boolean",
+							"default": true
+						},
+						"notionProperty": {
+							"description": "The name of the Notion property to set the user review score in.",
+							"type": "string",
+							"default": "Review Score"
+						}
+					}
 				}
 			}
 		}

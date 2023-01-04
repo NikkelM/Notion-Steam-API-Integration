@@ -206,8 +206,14 @@ async function findChangesAndAddDetails() {
 					}
 				}
 
-				// Get the Steam user review score as a percentage
-				const steamReviewScore = appInfo.common.review_percentage ? parseInt(appInfo.common.review_percentage) / 100 : null;
+				if (CONFIG.notionProperties.reviewScore?.enabled) {
+					// Get the Steam user review score as a percentage
+					const steamReviewScore = appInfo.common.review_percentage ? parseInt(appInfo.common.review_percentage) / 100 : null;
+
+					properties[CONFIG.notionProperties.reviewScore.notionProperty] = {
+						"number": steamReviewScore
+					}
+				}
 
 				// Parse the tags from the Steam API. If no tags are found, set a "No tags found" placeholder
 				const tags = appInfo.common.store_tags ? await getSteamTagNames(appInfo.common.store_tags).then((tags) => { return tags; }) : ["No tags found"];
