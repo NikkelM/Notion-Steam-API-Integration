@@ -154,6 +154,9 @@ async function findChangesAndAddDetails() {
 				console.log(`New game found with Steam App ID: ${steamAppId}`);
 
 				// Get info about this game from the Steam API
+				const appInfoDirect = await getSteamAppInfoDirect(steamAppId);
+
+				// Get info about this game from the SteamUser API
 				const appInfoSteamUser = await getSteamAppInfoSteamUser(steamAppId).then((appInfoSteamUser) => { return appInfoSteamUser; });
 
 				// The properties that will be passed to the Notion API call
@@ -162,8 +165,7 @@ async function findChangesAndAddDetails() {
 				let icon = null;
 
 				if (CONFIG.gameProperties.gameName?.enabled) {
-					// Get the game's title. If no title is available, use a placeholder
-					const gameTitle = appInfoSteamUser.common.name ? appInfoSteamUser.common.name : "CouldNotFetchTitle";
+					const gameTitle = appInfoDirect.name
 					const propertyType = CONFIG.gameProperties.gameName.isPageTitle ? "title" : "rich_text";
 
 					properties[CONFIG.gameProperties.gameName.notionProperty] = {
@@ -180,7 +182,7 @@ async function findChangesAndAddDetails() {
 
 				if (CONFIG.gameProperties.coverImage) {
 					// Get the URL for the cover image. Default value has a Steam theme
-					const coverUrl = appInfoSteamUser.common.header_image?.english ? `https://cdn.cloudflare.steamstatic.com/steam/apps/${steamAppId}/${appInfoSteamUser.common.header_image.english}` : "https://www.metal-hammer.de/wp-content/uploads/2022/11/22/19/steam-logo.jpg";
+					const coverUrl = appInfoDirect.header_image ? appInfoDirect.header_image : "https://www.metal-hammer.de/wp-content/uploads/2022/11/22/19/steam-logo.jpg";
 
 					cover = {
 						"type": "external",
@@ -192,6 +194,7 @@ async function findChangesAndAddDetails() {
 
 				if (CONFIG.gameProperties.gameIcon) {
 					// Get the URL for the game icon. Default value has a Steam theme
+					// Game icon URL is not available through the Steam store API, so we have to use the SteamUser API
 					const iconUrl = appInfoSteamUser.common.icon ? `https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/${steamAppId}/${appInfoSteamUser.common.icon}.jpg` : "https://iconarchive.com/download/i75918/martz90/circle/steam.ico";
 
 					icon = {
@@ -204,6 +207,7 @@ async function findChangesAndAddDetails() {
 
 				if (CONFIG.gameProperties.releaseDate?.enabled) {
 					// Get the release date. If no release date is available, set null
+					// The releaseDate format from the Steam API is not in ISO format, so we use the SteamUser API instead
 					let releaseDate;
 					if (appInfoSteamUser.common.original_release_date) {
 						releaseDate = new Date(parseInt(appInfoSteamUser.common.original_release_date) * 1000).toISOString();
@@ -228,6 +232,7 @@ async function findChangesAndAddDetails() {
 
 				if (CONFIG.gameProperties.reviewScore?.enabled) {
 					// Get the Steam user review score as a percentage
+					// The reviewScore is not available through the Steam store API, so we have to use the SteamUser API instead
 					const steamReviewScore = appInfoSteamUser.common.review_percentage ? parseInt(appInfoSteamUser.common.review_percentage) / 100 : null;
 
 					properties[CONFIG.gameProperties.reviewScore.notionProperty] = {
@@ -237,6 +242,7 @@ async function findChangesAndAddDetails() {
 
 				if (CONFIG.gameProperties.tags?.enabled) {
 					// Parse the tags from the Steam API. If no tags are found, set a "No tags found" placeholder
+					// The tags are not available through the Steam store API, so we have to use the SteamUser API instead
 					const tags = appInfoSteamUser.common.store_tags ? await getSteamTagNames(appInfoSteamUser.common.store_tags).then((tags) => { return tags; }) : ["No tags found"];
 
 					properties[CONFIG.gameProperties.tags.notionProperty] = {
