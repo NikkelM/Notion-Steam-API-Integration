@@ -8,7 +8,8 @@
 		"gameName": {
 			"enabled": true,
 			"notionProperty": "Game Name",
-			"isTitleProperty": true
-		}
+			"isPageTitle": true
+		},
+		"coverImage": true
 	}
 }

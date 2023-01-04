@@ -44,12 +44,12 @@
 					"default": {
 						"enabled": true,
 						"notionProperty": "Game Name",
-						"isTitleProperty": true
+						"isPageTitle": true
 					},
 					"additionalProperties": false,
 					"properties": {
 						"enabled": {
-							"description": "Whther or not the name of the game should be set in the database.",
+							"description": "Whether or not the name of the game should be set in the database.",
 							"type": "boolean",
 							"default": true
 						},
@@ -58,12 +58,21 @@
 							"type": "string",
 							"default": "Game Name"
 						},
-						"isTitleProperty": {
+						"isPageTitle": {
 							"description": "Indicates if this property is the \"Title\" of the Notion page or not.",
 							"type": "boolean",
 							"default": true
 						}
-					}
+					},
+					"required": [
+						"enabled",
+						"notionProperty"
+					]
+				},
+				"coverImage": {
+					"description": "The cover image of the game as it appears on the shop page. Will be set as the cover image for the page if enabled.",
+					"type": "boolean",
+					"default": true
 				}
 			}
 		}

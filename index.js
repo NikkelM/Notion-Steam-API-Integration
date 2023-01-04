@@ -135,12 +135,40 @@ async function findChangesAndAddDetails() {
 				// Get info about this game from the Steam API
 				const appInfo = await getSteamAppInfo(steamAppId).then((appInfo) => { return appInfo; });
 
-				// Get the game's title. If no title is available, use a placeholder
-				const gameTitle = appInfo.common.name ? appInfo.common.name : "CouldNotFetchTitle";
+				// The properties that will be passed to the Notion API call
+				let properties = {};
+
+				if (CONFIG.notionProperties.gameName?.enabled) {
+					// Get the game's title. If no title is available, use a placeholder
+					const gameTitle = appInfo.common.name ? appInfo.common.name : "CouldNotFetchTitle";
+					const propertyType = CONFIG.notionProperties.gameName.isPageTitle ? "title" : "rich_text";
+
+					properties[CONFIG.notionProperties.gameName.notionProperty] = {
+						[propertyType]: [
+							{
+								"type": "text",
+								"text": {
+									"content": gameTitle
+								}
+							}
+						]
+					}
+				}
+
+				if (CONFIG.notionProperties.coverImage) {
+					// Get the URL for the cover image. Default value has a Steam theme
+					const coverUrl = appInfo.common.header_image?.english ? `https://cdn.cloudflare.steamstatic.com/steam/apps/${steamAppId}/${appInfo.common.header_image.english}` : "https://www.metal-hammer.de/wp-content/uploads/2022/11/22/19/steam-logo.jpg";
+
+					properties.cover = {
+						"type": "external",
+						"external": {
+							"url": coverUrl
+						}
+					}
+				}
 
 				// Get the URL's for the cover image and icon. Default values have a Steam theme
 				// TODO: Don't set it at all if not found, to not overwrite potential custom images
-				const coverUrl = appInfo.common.header_image?.english ? `https://cdn.cloudflare.steamstatic.com/steam/apps/${steamAppId}/${appInfo.common.header_image.english}` : "https://www.metal-hammer.de/wp-content/uploads/2022/11/22/19/steam-logo.jpg";
 				const iconUrl = appInfo.common.icon ? `https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/${steamAppId}/${appInfo.common.icon}.jpg` : "https://iconarchive.com/download/i75918/martz90/circle/steam.ico";
 
 				// Get the release date. If no version is available, use the Unix epoch
@@ -165,48 +193,49 @@ async function findChangesAndAddDetails() {
 				// Update the game's page in the database with the new info
 				await notion.pages.update({
 					page_id: pageId,
-					properties: {
-						"Name": {
-							"title": [
-								{
-									"type": "text",
-									"text": {
-										"content": gameTitle
-									}
-								}
-							]
-						},
-						"Release": {
-							"date": {
-								"start": releaseDate
-							}
-						},
-						"Store page": {
-							"url": `https://store.steampowered.com/app/${steamAppId}`
-						},
-						"Steam Reviews": {
-							"number": steamReviewScore
-						},
-						"Tags": {
-							"multi_select": tags.map((tag) => {
-								return {
-									"name": tag
-								}
-							})
-						}
-					},
-					cover: {
-						"type": "external",
-						"external": {
-							"url": coverUrl
-						}
-					},
-					icon: {
-						"type": "external",
-						"external": {
-							"url": iconUrl
-						}
-					}
+					properties: properties
+					// properties: {
+					// 	"Name": {
+					// 		"title": [
+					// 			{
+					// 				"type": "text",
+					// 				"text": {
+					// 					"content": gameTitle
+					// 				}
+					// 			}
+					// 		]
+					// 	},
+					// 	"Release": {
+					// 		"date": {
+					// 			"start": releaseDate
+					// 		}
+					// 	},
+					// 	"Store page": {
+					// 		"url": `https://store.steampowered.com/app/${steamAppId}`
+					// 	},
+					// 	"Steam Reviews": {
+					// 		"number": steamReviewScore
+					// 	},
+					// 	"Tags": {
+					// 		"multi_select": tags.map((tag) => {
+					// 			return {
+					// 				"name": tag
+					// 			}
+					// 		})
+					// 	}
+					// },
+					// cover: {
+					// 	"type": "external",
+					// 	"external": {
+					// 		"url": coverUrl
+					// 	}
+					// },
+					// icon: {
+					// 	"type": "external",
+					// 	"external": {
+					// 		"url": iconUrl
+					// 	}
+					// }
 				});
 
 				// Add this game to the local database
@@ -236,9 +265,9 @@ async function getGamesFromDatabase() {
 	async function getPageOfGames(cursor) {
 		// While there are more pages left in the query, get pages from the database. 
 		const currentPages = await queryDatabase(cursor);
-	
+
 		currentPages.results.forEach(page => games[page.id] = page.properties["Steam App ID"].number);
-	
+
 		if (currentPages.has_more) {
 			await getPageOfGames(currentPages.next_cursor)
 		}
