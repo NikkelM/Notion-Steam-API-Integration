@@ -310,3 +310,38 @@ The name of the Notion property to set the tags in. This field must be of type "
 |---|---|---|---|
 | `string` | `"Tags"` | A valid Notion property name | Yes |
 </details>
+
+<details>
+<summary><code>gameDescription</code></summary>
+
+The short description of the game as it appears on the store page.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `object` | See item below | See sections below | No |
+
+```json
+"gameDescription": {
+	"enabled": true,
+	"notionProperty": "Game Description"
+}
+```
+
+<h3>Possible values</h3>
+
+<h4><code>enabled</code></h4>
+
+Whether or not the description of the game should be set in the database.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `boolean` | `true` | `true` or `false` | Yes |
+
+<h4><code>notionProperty</code></h4>
+
+The name of the Notion property to set the description in.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `string` | `"Game Description"` | A valid Notion property name | Yes |
+</details>

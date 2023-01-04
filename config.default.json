@@ -24,6 +24,10 @@
 		"tags": {
 			"enabled": true,
 			"notionProperty": "Tags"
+		},
+		"gameDescription": {
+			"enabled": true,
+			"notionProperty": "Game Description"
 		}
 	}
 }

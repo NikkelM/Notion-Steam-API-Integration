@@ -185,6 +185,31 @@
 						"enabled",
 						"notionProperty"
 					]
+				},
+				"gameDescription": {
+					"description": "The short description of the game as it appears on the store page.",
+					"type": "object",
+					"default": {
+						"enabled": true,
+						"notionProperty": "Game Description"
+					},
+					"additionalProperties": false,
+					"properties": {
+						"enabled": {
+							"description": "Whether or not the description of the game should be set in the database.",
+							"type": "boolean",
+							"default": true
+						},
+						"notionProperty": {
+							"description": "The name of the Notion property to set the description in.",
+							"type": "string",
+							"default": "Game Description"
+						}
+					},
+					"required": [
+						"enabled",
+						"notionProperty"
+					]
 				}
 			}
 		}
