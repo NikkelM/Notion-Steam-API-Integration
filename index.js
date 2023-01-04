@@ -182,17 +182,28 @@ async function findChangesAndAddDetails() {
 					}
 				}
 
-				// Get the release date. If no version is available, use the Unix epoch
-				// Formatted as YYYY-MM-DD
-				let releaseDate;
-				if (appInfo.common.original_release_date) {
-					releaseDate = new Date(parseInt(appInfo.common.original_release_date) * 1000).toISOString().split("T")[0];
-				} else if (appInfo.common.steam_release_date) {
-					releaseDate = new Date(parseInt(appInfo.common.steam_release_date) * 1000).toISOString().split("T")[0];
-				} else if (appInfo.common.store_asset_mtime) {
-					releaseDate = new Date(parseInt(appInfo.common.store_asset_mtime) * 1000).toISOString().split("T")[0];
-				} else {
-					releaseDate = new Date(0).toISOString().split("T")[0];
+				if (CONFIG.notionProperties.releaseDate?.enabled) {
+					// Get the release date. If no release date is available, set null
+					let releaseDate;
+					if (appInfo.common.original_release_date) {
+						releaseDate = new Date(parseInt(appInfo.common.original_release_date) * 1000).toISOString();
+					} else if (appInfo.common.steam_release_date) {
+						releaseDate = new Date(parseInt(appInfo.common.steam_release_date) * 1000).toISOString();
+					} else if (appInfo.common.store_asset_mtime) {
+						releaseDate = new Date(parseInt(appInfo.common.store_asset_mtime) * 1000).toISOString();
+					} else {
+						releaseDate = null;
+					}
+
+					if (releaseDate && CONFIG.notionProperties.releaseDate.format == "date") {
+						releaseDate = releaseDate.split("T")[0];
+					}
+
+					properties[CONFIG.notionProperties.releaseDate.notionProperty] = {
+						"date": {
+							"start": releaseDate
+						}
+					}
 				}
 
 				// Get the Steam user review score as a percentage

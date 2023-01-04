@@ -11,6 +11,11 @@
 			"isPageTitle": true
 		},
 		"coverImage": true,
-		"gameIcon": true
+		"gameIcon": true,
+		"releaseDate": {
+			"enabled": true,
+			"notionProperty": "Release Date",
+			"format": "date"
+		}
 	}
 }
