@@ -254,6 +254,21 @@ async function findChangesAndAddDetails() {
 					}
 				}
 
+				if (CONFIG.gameProperties.gameDescription?.enabled) {
+					// Get the game description. If no description is available, set a null
+					const gameDescription = appInfoDirect.short_description ? appInfoDirect.short_description : null;
+
+					properties[CONFIG.gameProperties.gameDescription.notionProperty] = {
+						"rich_text": [
+							{
+								"text": {
+									"content": gameDescription
+								}
+							}
+						]
+					}
+				}
+
 				// Update the game's page in the database with the new info
 				await notion.pages.update({
 					page_id: pageId,
