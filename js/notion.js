@@ -50,12 +50,12 @@ async function queryDatabase(cursor) {
 	});
 }
 
-export function updateNotionPage(pageId, properties, cover, icon) {
+export function updateNotionPage(pageId, properties) {
 	// Update the game's page in the database with the new info
 	NOTION.pages.update({
 		page_id: pageId,
-		properties: properties,
-		cover: cover,
-		icon: icon
+		properties: properties.properties,
+		cover: properties.cover,
+		icon: properties.icon
 	});
 }

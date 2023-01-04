@@ -10,7 +10,7 @@ await new Promise(resolve => steamClient.on('loggedOn', resolve));
 // Does not offer all info that the SteamUser API does
 // For some apps, the API does not return any info, even though the app exists
 export async function getSteamAppInfoDirect(appId, retryCount = 0) {
-	const result = await fetch(`https://store.steampowered.com/api/appdetails/?appids=${appId}`)
+	const result = await fetch(`https://store.steampowered.com/api/appdetails/?appids=${appId}&cc=us`)
 		.then(response => response.json())
 		.then(data => {
 			if (data && data[appId]?.success) {
