@@ -46,8 +46,9 @@ try {
 if (!fs.existsSync(__dirname + '/backend')) {
 	fs.mkdirSync(__dirname + '/backend');
 }
-// Create an empty local store of all games in the database if it doesn't exist
-if (!fs.existsSync(__dirname + '/backend/localDatabase.json')) {
+// Create an empty local store of all games in the database if it doesn't exist, or the user wants to reset it
+if (!fs.existsSync(__dirname + '/backend/localDatabase.json') || CONFIG.forceReset) {
+	console.log("Initializing/Resetting local database...");
 	fs.writeFileSync(__dirname + '/backend/localDatabase.json', JSON.stringify({}, null, 2));
 }
 
@@ -57,7 +58,8 @@ let localDatabase = JSON.parse(fs.readFileSync(__dirname + '/backend/localDataba
 if (localDatabase.lastUpdatedAt) {
 	console.log(`Local database was last updated at ${localDatabase.lastUpdatedAt} UTC.\n`);
 } else {
-	localDatabase.lastUpdatedAt = new Date().toISOString();
+	localDatabase.lastUpdatedAt = new Date(0).toISOString();
+	console.log(localDatabase.lastUpdatedAt);
 	console.log("Successfully initialized local database.\n");
 }
 // ---------- Main ----------
@@ -80,7 +82,7 @@ console.log("Logging into Steam...");
 steamClient.logOn();
 
 async function getSteamAppInfo(appId) {
-	return new Promise(async (resolve, reject) => {
+	return new Promise(async (resolve) => {
 		// Passing true as the third argument automatically requests access tokens, which are required for some apps
 		let response = await steamClient.getProductInfo([appId], [], true);
 
@@ -95,7 +97,7 @@ async function getSteamTagNames(storeTags) {
 		return storeTags[key];
 	});
 
-	return new Promise(async (resolve, reject) => {
+	return new Promise(async (resolve) => {
 		let response = await steamClient.getStoreTagNames("english", tagIds);
 
 		const result = Object.keys(response.tags).map(function (key) {
@@ -110,14 +112,15 @@ async function getSteamTagNames(storeTags) {
 
 const notion = new Client({ auth: CONFIG.notionIntegrationKey });
 const databaseId = CONFIG.notionDatabaseId;
-const updateInterval = 60000; // 1 minute
+const updateInterval = CONFIG.updateInterval;
 
 async function findChangesAndAddDetails() {
 	console.log("Looking for changes in Notion database...");
 
 	// Update the last updated timestamp
 	// Do this before fetching to make sure we don't miss changes made between now and fetching new properties below
-	const newLastUpdatedAt = new Date().toISOString();
+	// Subtract 20 more seconds to make sure we have some buffer
+	const newLastUpdatedAt = new Date(Date.now() - 20000).toISOString();
 
 	// Get the games currently in the database
 	const newGamesInNotionDatabase = await getGamesFromDatabase();
@@ -206,24 +209,26 @@ async function findChangesAndAddDetails() {
 					}
 				});
 
-				// Add this game to the local store of all games
-				// Do this after all the rest to make sure we don't add a game to the local store if something goes wrong
+				// Add this game to the local database
+				// Do this after all the rest to make sure we don't add a game to the local database if something goes wrong
 				localDatabase[pageId] = steamAppId;
 			} catch (error) {
 				console.error(error);
 			}
 		}
 	}
+
 	localDatabase.lastUpdatedAt = newLastUpdatedAt;
 	// Write the updated local store to disk
 	fs.writeFileSync(__dirname + '/backend/localDatabase.json', JSON.stringify(localDatabase, null, 2));
 
-	console.log(`Done looking for changes in Notion database. Looking again in ${updateInterval / 1000} seconds.\n`);
-	// Run this method every updateInterval milliseconds
+	console.log(`Done looking for changes in Notion database. Looking again in ${updateInterval / 60000} minute(s).\n`);
+
+	// Run this method again in `updateInterval` milliseconds
 	setTimeout(main, updateInterval);
 }
 
-// Get a paginated list of Games currently in the database. 
+// Get a list of games in the Notion database that have the `Steam App ID` field set and were last edited after our last check. 
 async function getGamesFromDatabase() {
 
 	const games = {}
@@ -231,9 +236,9 @@ async function getGamesFromDatabase() {
 	async function getPageOfGames(cursor) {
 		// While there are more pages left in the query, get pages from the database. 
 		const currentPages = await queryDatabase(cursor);
-
+	
 		currentPages.results.forEach(page => games[page.id] = page.properties["Steam App ID"].number);
-
+	
 		if (currentPages.has_more) {
 			await getPageOfGames(currentPages.next_cursor)
 		}

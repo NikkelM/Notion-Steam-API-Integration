@@ -18,11 +18,23 @@
 			"description": "The ID of the database you want to run the integration on. You can find the ID in the URL of your database, e.g. https://www.notion.so/myworkspace/your-database-id",
 			"type": "string",
 			"default": ""
+		},
+		"updateInterval": {
+			"description": "The interval in which the integration will check for updates to your Notion database. The value is in milliseconds. Must be at least 60000 (1 minute).",
+			"type": "integer",
+			"default": 60000,
+			"minimum": 60000
+		},
+		"forceReset": {
+			"description": "If true, the integration will reset the local database, fetch all Steam App ID's from the Notion database and refresh all game properties. This may take longer, depending on the size of your Notion database.",
+			"type": "boolean",
+			"default": false
 		}
 	},
 	"required": [
 		"notionIntegrationKey",
-		"notionDatabaseId"
+		"notionDatabaseId",
+		"updateInterval"
 	],
 	"additionalProperties": false
 }
