@@ -3,5 +3,27 @@
 	"notionIntegrationKey": "<secretKey>",
 	"notionDatabaseId": "<databaseId>",
 	"updateInterval": 60000,
-	"forceReset": false
+	"forceReset": false,
+	"gameProperties": {
+		"gameName": {
+			"enabled": true,
+			"notionProperty": "Game Name",
+			"isPageTitle": true
+		},
+		"coverImage": true,
+		"gameIcon": true,
+		"releaseDate": {
+			"enabled": true,
+			"notionProperty": "Release Date",
+			"format": "date"
+		},
+		"reviewScore": {
+			"enabled": true,
+			"notionProperty": "Review Score"
+		},
+		"tags": {
+			"enabled": true,
+			"notionProperty": "Tags"
+		}
+	}
 }

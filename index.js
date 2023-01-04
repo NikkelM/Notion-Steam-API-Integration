@@ -62,6 +62,7 @@ if (localDatabase.lastUpdatedAt) {
 	console.log(localDatabase.lastUpdatedAt);
 	console.log("Successfully initialized local database.\n");
 }
+
 // ---------- Main ----------
 
 function main() {
@@ -119,8 +120,9 @@ async function findChangesAndAddDetails() {
 
 	// Update the last updated timestamp
 	// Do this before fetching to make sure we don't miss changes made between now and fetching new properties below
-	// Subtract 20 more seconds to make sure we have some buffer
-	const newLastUpdatedAt = new Date(Date.now() - 20000).toISOString();
+	// Subtract 60 more seconds to make sure we have some buffer in case things get changed inbetween executions
+	const newLastUpdatedAt = new Date(Date.now() - 60000).toISOString();
+	let hadError = false;
 
 	// Get the games currently in the database
 	const newGamesInNotionDatabase = await getGamesFromDatabase();
@@ -135,78 +137,104 @@ async function findChangesAndAddDetails() {
 				// Get info about this game from the Steam API
 				const appInfo = await getSteamAppInfo(steamAppId).then((appInfo) => { return appInfo; });
 
-				// Get the game's title. If no title is available, use a placeholder
-				const gameTitle = appInfo.common.name ? appInfo.common.name : "CouldNotFetchTitle";
+				// The properties that will be passed to the Notion API call
+				let properties = {};
+				let cover = null;
+				let icon = null;
 
-				// Get the URL's for the cover image and icon. Default values have a Steam theme
-				// TODO: Don't set it at all if not found, to not overwrite potential custom images
-				const coverUrl = appInfo.common.header_image?.english ? `https://cdn.cloudflare.steamstatic.com/steam/apps/${steamAppId}/${appInfo.common.header_image.english}` : "https://www.metal-hammer.de/wp-content/uploads/2022/11/22/19/steam-logo.jpg";
-				const iconUrl = appInfo.common.icon ? `https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/${steamAppId}/${appInfo.common.icon}.jpg` : "https://iconarchive.com/download/i75918/martz90/circle/steam.ico";
+				if (CONFIG.notionProperties.gameName?.enabled) {
+					// Get the game's title. If no title is available, use a placeholder
+					const gameTitle = appInfo.common.name ? appInfo.common.name : "CouldNotFetchTitle";
+					const propertyType = CONFIG.notionProperties.gameName.isPageTitle ? "title" : "rich_text";
 
-				// Get the release date. If no version is available, use the Unix epoch
-				// Formatted as YYYY-MM-DD
-				let releaseDate;
-				if (appInfo.common.original_release_date) {
-					releaseDate = new Date(parseInt(appInfo.common.original_release_date) * 1000).toISOString().split("T")[0];
-				} else if (appInfo.common.steam_release_date) {
-					releaseDate = new Date(parseInt(appInfo.common.steam_release_date) * 1000).toISOString().split("T")[0];
-				} else if (appInfo.common.store_asset_mtime) {
-					releaseDate = new Date(parseInt(appInfo.common.store_asset_mtime) * 1000).toISOString().split("T")[0];
-				} else {
-					releaseDate = new Date(0).toISOString().split("T")[0];
+					properties[CONFIG.notionProperties.gameName.notionProperty] = {
+						[propertyType]: [
+							{
+								"type": "text",
+								"text": {
+									"content": gameTitle
+								}
+							}
+						]
+					}
 				}
 
-				// Get the Steam user review score as a percentage
-				const steamReviewScore = appInfo.common.review_percentage ? parseInt(appInfo.common.review_percentage) / 100 : null;
+				if (CONFIG.notionProperties.coverImage) {
+					// Get the URL for the cover image. Default value has a Steam theme
+					const coverUrl = appInfo.common.header_image?.english ? `https://cdn.cloudflare.steamstatic.com/steam/apps/${steamAppId}/${appInfo.common.header_image.english}` : "https://www.metal-hammer.de/wp-content/uploads/2022/11/22/19/steam-logo.jpg";
 
-				// Parse the tags from the Steam API. If no tags are found, set a "No tags found" placeholder
-				const tags = appInfo.common.store_tags ? await getSteamTagNames(appInfo.common.store_tags).then((tags) => { return tags; }) : ["No tags found"];
-
-				// Update the game's page in the database with the new info
-				await notion.pages.update({
-					page_id: pageId,
-					properties: {
-						"Name": {
-							"title": [
-								{
-									"type": "text",
-									"text": {
-										"content": gameTitle
-									}
-								}
-							]
-						},
-						"Release": {
-							"date": {
-								"start": releaseDate
-							}
-						},
-						"Store page": {
-							"url": `https://store.steampowered.com/app/${steamAppId}`
-						},
-						"Steam Reviews": {
-							"number": steamReviewScore
-						},
-						"Tags": {
-							"multi_select": tags.map((tag) => {
-								return {
-									"name": tag
-								}
-							})
-						}
-					},
-					cover: {
+					cover = {
 						"type": "external",
 						"external": {
 							"url": coverUrl
 						}
-					},
-					icon: {
+					}
+				}
+
+				if (CONFIG.notionProperties.gameIcon) {
+					// Get the URL for the game icon. Default value has a Steam theme
+					const iconUrl = appInfo.common.icon ? `https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/${steamAppId}/${appInfo.common.icon}.jpg` : "https://iconarchive.com/download/i75918/martz90/circle/steam.ico";
+
+					icon = {
 						"type": "external",
 						"external": {
 							"url": iconUrl
 						}
 					}
+				}
+
+				if (CONFIG.notionProperties.releaseDate?.enabled) {
+					// Get the release date. If no release date is available, set null
+					let releaseDate;
+					if (appInfo.common.original_release_date) {
+						releaseDate = new Date(parseInt(appInfo.common.original_release_date) * 1000).toISOString();
+					} else if (appInfo.common.steam_release_date) {
+						releaseDate = new Date(parseInt(appInfo.common.steam_release_date) * 1000).toISOString();
+					} else if (appInfo.common.store_asset_mtime) {
+						releaseDate = new Date(parseInt(appInfo.common.store_asset_mtime) * 1000).toISOString();
+					} else {
+						releaseDate = null;
+					}
+
+					if (releaseDate && CONFIG.notionProperties.releaseDate.format == "date") {
+						releaseDate = releaseDate.split("T")[0];
+					}
+
+					properties[CONFIG.notionProperties.releaseDate.notionProperty] = {
+						"date": {
+							"start": releaseDate
+						}
+					}
+				}
+
+				if (CONFIG.notionProperties.reviewScore?.enabled) {
+					// Get the Steam user review score as a percentage
+					const steamReviewScore = appInfo.common.review_percentage ? parseInt(appInfo.common.review_percentage) / 100 : null;
+
+					properties[CONFIG.notionProperties.reviewScore.notionProperty] = {
+						"number": steamReviewScore
+					}
+				}
+
+				if (CONFIG.notionProperties.tags?.enabled) {
+					// Parse the tags from the Steam API. If no tags are found, set a "No tags found" placeholder
+					const tags = appInfo.common.store_tags ? await getSteamTagNames(appInfo.common.store_tags).then((tags) => { return tags; }) : ["No tags found"];
+
+					properties[CONFIG.notionProperties.tags.notionProperty] = {
+						"multi_select": tags.map((tag) => {
+							return {
+								"name": tag
+							}
+						})
+					}
+				}
+
+				// Update the game's page in the database with the new info
+				await notion.pages.update({
+					page_id: pageId,
+					properties: properties,
+					cover: cover,
+					icon: icon
 				});
 
 				// Add this game to the local database
@@ -214,11 +242,16 @@ async function findChangesAndAddDetails() {
 				localDatabase[pageId] = steamAppId;
 			} catch (error) {
 				console.error(error);
+				hadError = true;
 			}
 		}
 	}
 
-	localDatabase.lastUpdatedAt = newLastUpdatedAt;
+	// Only update the last updated time if there were no errors during execution
+	if (!hadError) {
+		localDatabase.lastUpdatedAt = newLastUpdatedAt;
+	}
+
 	// Write the updated local store to disk
 	fs.writeFileSync(__dirname + '/backend/localDatabase.json', JSON.stringify(localDatabase, null, 2));
 
@@ -236,9 +269,9 @@ async function getGamesFromDatabase() {
 	async function getPageOfGames(cursor) {
 		// While there are more pages left in the query, get pages from the database. 
 		const currentPages = await queryDatabase(cursor);
-	
+
 		currentPages.results.forEach(page => games[page.id] = page.properties["Steam App ID"].number);
-	
+
 		if (currentPages.has_more) {
 			await getPageOfGames(currentPages.next_cursor)
 		}

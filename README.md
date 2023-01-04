@@ -31,18 +31,9 @@ Following this, the database entry will be updated with cleaned up data from the
 You are able to have the integration running in the background whilst editing the database.
 You can also have database entries without the `Steam App ID` set, these will be ignored by the integration.
 
-## Database structure
+If you change the configuration to include new game properties, you will need to run the integration with the `forceReset` flag set to `true` in the configuration, in order to also set the new value for all previously discovered games.
 
-The integration makes a number of assumptions about your database's structure, more specifically that it has the following properties:
-
-| Property name | Data type |
-|---|---|
-| Release | `Date` |
-| Store page | `URL` |
-| Steam Reviews | `Number`, shown as percentage |
-| Tags | `Multi-select` |
-
-Additionally, the `Title` property of your database must be named `Name`.
+There currently is no way to reset a value that was previously set in the Notion database.
 
 ## Configuration
 
@@ -61,6 +52,8 @@ The schema can be found in the `config.schema.json` file and used within your `c
 ### Properties
 
 The following is a list of all configuration items, their defaults and the values they can take.
+
+#### Top-level properties
 
 <details>
 <summary><code>notionIntegrationKey</code></summary>
@@ -100,4 +93,220 @@ If true, the integration will reset the local database, fetch all Steam App ID's
 | Type | Default value | Possible values | Required |
 |---|---|---|---|
 | `boolean` | `false` | `true` or `false` | No |
+</details>
+
+<details>
+<summary><code>gameProperties</code></summary>
+
+Which game properties should be fetched when a new Steam game is detected, and the name of the corresponding field in the Notion database.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `object` | See item below | See sections below | Yes, and at least one property set. |
+
+```json
+"gameProperties": {
+	"gameName": {
+		"enabled": true,
+		"notionProperty": "Game Name",
+		"isPageTitle": true
+	},
+	"coverImage": true,
+	"gameIcon": true,
+	"releaseDate": {
+		"enabled": true,
+		"notionProperty": "Release Date",
+		"format": "date"
+	},
+	"reviewScore": {
+		"enabled": true,
+		"notionProperty": "Review Score"
+	},
+	"tags": {
+		"enabled": true,
+		"notionProperty": "Tags"
+	}
+}
+```
+</details>
+
+#### gameProperties
+
+<details>
+<summary><code>gameName</code></summary>
+
+The name of the game as it appears on Steam.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `object` | See item below | See sections below | No |
+
+```json
+"gameName": {
+	"enabled": true,
+	"notionProperty": "Game Name",
+	"isPageTitle": true
+}
+```
+
+<h3>Possible values</h3>
+
+<h4><code>enabled</code></h4>
+
+Whether or not the name of the game should be set in the database.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `boolean` | `true` | `true` or `false` | Yes |
+
+<h4><code>notionProperty</code></h4>
+
+The name of the Notion property to set the game name in.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `string` | `"Game Name"` | A valid Notion property name | Yes |
+
+<h4><code>isPageTitle</code></h4>
+
+Indicates if this property is the "Title" of the Notion page or not.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `boolean` | `true` | `true` or `false` | No |
+</details>
+
+<details>
+<summary><code>coverImage</code></summary>
+
+The cover image of the game as it appears on the shop page. Will be set as the cover image for the page if enabled.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `boolean` | `true` | `true` or `false` | No |
+
+</details>
+
+<details>
+<summary><code>gameIcon</code></summary>
+
+The icon of the game as it appears in the game library. Will be set as the icon for the page if enabled.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `boolean` | `true` | `true` or `false` | No |
+</details>
+
+<details>
+<summary><code>releaseDate</code></summary>
+
+The release date of the game.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `object` | See item below | See sections below | No |
+
+```json
+"releaseDate": {
+	"enabled": true,
+	"notionProperty": "Release Date",
+	"format": "date"
+}
+```
+
+<h3>Possible values</h3>
+
+<h4><code>enabled</code></h4>
+
+Whether or not the release date of the game should be set in the database.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `boolean` | `true` | `true` or `false` | Yes |
+
+<h4><code>notionProperty</code></h4>
+
+The name of the Notion property to set the release date in.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `string` | `"Release Date"` | A valid Notion property name | Yes |
+
+<h4><code>format</code></h4>
+
+The format in which the release date should be set in the database. Can be either "date" or "datetime".
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `string` | `"date"` | `"date"` or `"datetime"` | Yes |
+</details>
+
+<details>
+<summary><code>reviewScore</code></summary>
+
+The user review score from 0-100.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `object` | See item below | See sections below | No |
+
+```json
+"reviewScore": {
+	"enabled": true,
+	"notionProperty": "Review Score"
+}
+```
+
+<h3>Possible values</h3>
+
+<h4><code>enabled</code></h4>
+
+Whether or not the user review score should be set in the database.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `boolean` | `true` | `true` or `false` | Yes |
+
+<h4><code>notionProperty</code></h4>
+
+The name of the Notion property to set the user review score in.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `string` | `"Review Score"` | A valid Notion property name | Yes |
+</details>
+
+<details>
+<summary><code>tags</code></summary>
+
+The user-defined tags of the game as they can be seen on the store page.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `object` | See item below | See sections below | No |
+
+```json
+"tags": {
+	"enabled": true,
+	"notionProperty": "Tags"
+}
+```
+
+<h3>Possible values</h3>
+
+<h4><code>enabled</code></h4>
+
+Whether or not the tags of the game should be set in the database.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `boolean` | `true` | `true` or `false` | Yes |
+
+<h4><code>notionProperty</code></h4>
+
+The name of the Notion property to set the tags in. This field must be of type "multi-select".
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `string` | `"Tags"` | A valid Notion property name | Yes |
 </details>
