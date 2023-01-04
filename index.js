@@ -94,7 +94,7 @@ async function getSteamAppInfoDirect(appId) {
 	return await fetch(`https://store.steampowered.com/api/appdetails?appids=${appId}`)
 		.then(response => response.json())
 		.then(data => {
-			return data[appId];
+			return data[appId].data;
 		}
 	);
 }
