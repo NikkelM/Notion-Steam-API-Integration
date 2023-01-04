@@ -10,6 +10,7 @@
 			"notionProperty": "Game Name",
 			"isPageTitle": true
 		},
-		"coverImage": true
+		"coverImage": true,
+		"gameIcon": true
 	}
 }

@@ -31,18 +31,9 @@ Following this, the database entry will be updated with cleaned up data from the
 You are able to have the integration running in the background whilst editing the database.
 You can also have database entries without the `Steam App ID` set, these will be ignored by the integration.
 
-## Database structure
+If you change the configuration to include new game properties, you will need to run the integration with the `forceReset` flag set to `true` in the configuration, in order to also set the new value for all previously discovered games.
 
-The integration makes a number of assumptions about your database's structure, more specifically that it has the following properties:
-
-| Property name | Data type |
-|---|---|
-| Release | `Date` |
-| Store page | `URL` |
-| Steam Reviews | `Number`, shown as percentage |
-| Tags | `Multi-select` |
-
-Additionally, the `Title` property of your database must be named `Name`.
+There currently is no way to reset a value that was previously set in the Notion database.
 
 ## Configuration
 

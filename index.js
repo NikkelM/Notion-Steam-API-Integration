@@ -119,8 +119,9 @@ async function findChangesAndAddDetails() {
 
 	// Update the last updated timestamp
 	// Do this before fetching to make sure we don't miss changes made between now and fetching new properties below
-	// Subtract 20 more seconds to make sure we have some buffer
-	const newLastUpdatedAt = new Date(Date.now() - 20000).toISOString();
+	// Subtract 60 more seconds to make sure we have some buffer in case things get changed inbetween executions
+	const newLastUpdatedAt = new Date(Date.now() - 60000).toISOString();
+	let hadError = false;
 
 	// Get the games currently in the database
 	const newGamesInNotionDatabase = await getGamesFromDatabase();
@@ -137,6 +138,8 @@ async function findChangesAndAddDetails() {
 
 				// The properties that will be passed to the Notion API call
 				let properties = {};
+				let cover = null;
+				let icon = null;
 
 				if (CONFIG.notionProperties.gameName?.enabled) {
 					// Get the game's title. If no title is available, use a placeholder
@@ -159,7 +162,7 @@ async function findChangesAndAddDetails() {
 					// Get the URL for the cover image. Default value has a Steam theme
 					const coverUrl = appInfo.common.header_image?.english ? `https://cdn.cloudflare.steamstatic.com/steam/apps/${steamAppId}/${appInfo.common.header_image.english}` : "https://www.metal-hammer.de/wp-content/uploads/2022/11/22/19/steam-logo.jpg";
 
-					properties.cover = {
+					cover = {
 						"type": "external",
 						"external": {
 							"url": coverUrl
@@ -167,9 +170,17 @@ async function findChangesAndAddDetails() {
 					}
 				}
 
-				// Get the URL's for the cover image and icon. Default values have a Steam theme
-				// TODO: Don't set it at all if not found, to not overwrite potential custom images
-				const iconUrl = appInfo.common.icon ? `https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/${steamAppId}/${appInfo.common.icon}.jpg` : "https://iconarchive.com/download/i75918/martz90/circle/steam.ico";
+				if (CONFIG.notionProperties.gameIcon) {
+					// Get the URL for the game icon. Default value has a Steam theme
+					const iconUrl = appInfo.common.icon ? `https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/${steamAppId}/${appInfo.common.icon}.jpg` : "https://iconarchive.com/download/i75918/martz90/circle/steam.ico";
+
+					icon = {
+						"type": "external",
+						"external": {
+							"url": iconUrl
+						}
+					}
+				}
 
 				// Get the release date. If no version is available, use the Unix epoch
 				// Formatted as YYYY-MM-DD
@@ -193,7 +204,9 @@ async function findChangesAndAddDetails() {
 				// Update the game's page in the database with the new info
 				await notion.pages.update({
 					page_id: pageId,
-					properties: properties
+					properties: properties,
+					cover: cover,
+					icon: icon
 					// properties: {
 					// 	"Name": {
 					// 		"title": [
@@ -243,11 +256,16 @@ async function findChangesAndAddDetails() {
 				localDatabase[pageId] = steamAppId;
 			} catch (error) {
 				console.error(error);
+				hadError = true;
 			}
 		}
 	}
 
-	localDatabase.lastUpdatedAt = newLastUpdatedAt;
+	// Only update the last updated time if there were no errors during execution
+	if (!hadError) {
+		localDatabase.lastUpdatedAt = newLastUpdatedAt;
+	}
+
 	// Write the updated local store to disk
 	fs.writeFileSync(__dirname + '/backend/localDatabase.json', JSON.stringify(localDatabase, null, 2));
 
