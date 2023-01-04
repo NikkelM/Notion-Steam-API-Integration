@@ -259,7 +259,7 @@ async function queryDatabase(cursor) {
 				{
 					"timestamp": "last_edited_time",
 					"last_edited_time": {
-						"on_or_after": localDatabase.lastUpdatedAt
+						"after": localDatabase.lastUpdatedAt
 					}
 				},
 				{
