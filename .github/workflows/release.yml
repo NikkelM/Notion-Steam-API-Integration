@@ -51,6 +51,7 @@ jobs:
           cp ./config.default.json ./release_files/config.default.json
           cp ./config.schema.json ./release_files/config.schema.json
           cp ./index.js ./release_files/index.js
+          cp ./js ./release_files/js
           cp ./package-lock.json ./release_files/package-lock.json
           cp ./package.json ./release_files/package.json
 
