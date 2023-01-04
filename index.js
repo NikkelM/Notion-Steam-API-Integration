@@ -61,9 +61,7 @@ if (!fs.existsSync(__dirname + '/backend/localDatabase.json') || CONFIG.forceRes
 // A JSON Object to hold all games in the Notion database
 let localDatabase = JSON.parse(fs.readFileSync(__dirname + '/backend/localDatabase.json'));
 
-if (localDatabase.lastUpdatedAt) {
-	console.log(`Local database was last updated at ${localDatabase.lastUpdatedAt} UTC.\n`);
-} else {
+if (!localDatabase.lastUpdatedAt) {
 	localDatabase.lastUpdatedAt = new Date(0).toISOString();
 	console.log("Successfully initialized local database.\n");
 }
@@ -118,7 +116,7 @@ async function getSteamAppInfoDirect(appId, retryCount = 0) {
 // Gets app info from the SteamUser API
 // Does not offer all info that the Steam store API does
 async function getSteamAppInfoSteamUser(appIds) {
-	console.log(`Getting app info from SteamUser API for ${appIds.length} newly found apps...`);
+	console.log(`Getting app info from SteamUser API for ${appIds.length} games...`);
 
 	return new Promise(async (resolve) => {
 		// Passing true as the third argument automatically requests access tokens, which are required for some apps
@@ -162,7 +160,9 @@ async function findChangesAndAddDetails() {
 	// Do this before fetching to make sure we don't miss changes made between now and fetching new properties below
 	// Subtract 60 more seconds to make sure we have some buffer in case things get changed inbetween executions
 	const newLastUpdatedAt = new Date(Date.now() - 60000).toISOString();
+	// If we encounter an error or would hit the Steam API request limit, we don't want to update the timestamp to find the games we missed again
 	let hadError = false;
+	let hitSteamAPILimit = false;
 
 	// Get the games currently in the database
 	let newGamesInNotionDatabase = await getGamesFromDatabase();
@@ -175,6 +175,13 @@ async function findChangesAndAddDetails() {
 		}
 	}
 
+	// Limit the number of games to avoid hitting the Steam API rate limit
+	if (Object.keys(newGamesInNotionDatabase).length > 50) {
+		console.log(`Found ${Object.keys(newGamesInNotionDatabase).length} new games in the Notion database. The Steam API limits the allowed amount of requests in quick succession. Some games will be updated later.\n`);
+		hitSteamAPILimit = true;
+		newGamesInNotionDatabase = Object.fromEntries(Object.entries(newGamesInNotionDatabase).slice(0, 50));
+	}
+
 	if (Object.keys(newGamesInNotionDatabase).length > 0) {
 		// Get info about the new games from the SteamUser API
 		const appInfoSteamUser = await getSteamAppInfoSteamUser(Object.values(newGamesInNotionDatabase)).then((appInfoSteamUser) => { return appInfoSteamUser; });
@@ -183,7 +190,7 @@ async function findChangesAndAddDetails() {
 		let gamesThisBatch = 0;
 		for (const [pageId, steamAppId] of Object.entries(newGamesInNotionDatabase)) {
 			try {
-				console.log(`New game found with Steam App ID: ${steamAppId}`);
+				console.log(`Updating properties for game with Steam App ID ${steamAppId}`);
 
 				// Get info about this game from the Steam API
 				const appInfoDirect = await getSteamAppInfoDirect(steamAppId);
@@ -331,7 +338,7 @@ async function findChangesAndAddDetails() {
 
 		// Only update the last updated time if there were no errors during execution
 		// This makes sure that we can find the games that had errors again the next time
-		if (!hadError) {
+		if (!hadError && !hitSteamAPILimit) {
 			localDatabase.lastUpdatedAt = newLastUpdatedAt;
 		}
 
