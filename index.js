@@ -65,7 +65,6 @@ if (localDatabase.lastUpdatedAt) {
 	console.log(`Local database was last updated at ${localDatabase.lastUpdatedAt} UTC.\n`);
 } else {
 	localDatabase.lastUpdatedAt = new Date(0).toISOString();
-	console.log(localDatabase.lastUpdatedAt);
 	console.log("Successfully initialized local database.\n");
 }
 
