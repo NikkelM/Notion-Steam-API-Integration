@@ -28,6 +28,10 @@
 		"gameDescription": {
 			"enabled": true,
 			"notionProperty": "Game Description"
+		},
+		"storePage": {
+			"enabled": true,
+			"notionProperty": "Store Page"
 		}
 	}
 }
