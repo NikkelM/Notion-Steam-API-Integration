@@ -228,55 +228,12 @@ async function findChangesAndAddDetails() {
 					}
 				}
 
-
 				// Update the game's page in the database with the new info
 				await notion.pages.update({
 					page_id: pageId,
 					properties: properties,
 					cover: cover,
 					icon: icon
-					// properties: {
-					// 	"Name": {
-					// 		"title": [
-					// 			{
-					// 				"type": "text",
-					// 				"text": {
-					// 					"content": gameTitle
-					// 				}
-					// 			}
-					// 		]
-					// 	},
-					// 	"Release": {
-					// 		"date": {
-					// 			"start": releaseDate
-					// 		}
-					// 	},
-					// 	"Store page": {
-					// 		"url": `https://store.steampowered.com/app/${steamAppId}`
-					// 	},
-					// 	"Steam Reviews": {
-					// 		"number": steamReviewScore
-					// 	},
-					// 	"Tags": {
-					// 		"multi_select": tags.map((tag) => {
-					// 			return {
-					// 				"name": tag
-					// 			}
-					// 		})
-					// 	}
-					// },
-					// cover: {
-					// 	"type": "external",
-					// 	"external": {
-					// 		"url": coverUrl
-					// 	}
-					// },
-					// icon: {
-					// 	"type": "external",
-					// 	"external": {
-					// 		"url": iconUrl
-					// 	}
-					// }
 				});
 
 				// Add this game to the local database
