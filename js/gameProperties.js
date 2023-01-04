@@ -37,6 +37,9 @@ export async function getGameProperties(appInfoDirect, appInfoSteamUser) {
 			case "gameDescription":
 				outputProperties = getGameDescription(propertyValue, appInfoDirect, outputProperties);
 				break;
+			case "storePage":
+				outputProperties = getGameStorePage(propertyValue, appInfoSteamUser, outputProperties);
+				break;
 			case "coverImage":
 				cover = getGameCoverImage(propertyValue, appInfoDirect, appInfoSteamUser) ?? cover;
 				break;
@@ -194,6 +197,16 @@ function getGameDescription(gameDescriptionProperty, appInfoDirect, outputProper
 				}
 			}
 		]
+	}
+
+	return outputProperties;
+}
+
+function getGameStorePage(storePageProperty, appInfoSteamUser, outputProperties) {
+	if (!storePageProperty.enabled) { return outputProperties; }
+
+	outputProperties[storePageProperty.notionProperty] = {
+		"url": `https://store.steampowered.com/app/${appInfoSteamUser.gameid}`
 	}
 
 	return outputProperties;
