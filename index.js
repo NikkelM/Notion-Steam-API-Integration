@@ -93,10 +93,11 @@ async function getSteamAppInfoDirect(appId) {
 	return await fetch(`https://store.steampowered.com/api/appdetails?appids=${appId}`)
 		.then(response => response.json())
 		.then(data => {
-			if (data[appId].success) {
-				return data[appId].data;
+			if (data.appId?.success) {
+				return data.appId.data;
 			}
-			console.log(`Failed to get app info for app ${appId} from the Steam store API. It is likely that the app is not available in your region. Some info may still be available using the SteamUser API.`)
+			console.log(`Failed to get app info for app ${appId} from the Steam store API. It is likely that the app is not available in your region. Some info may still be available using the SteamUser API.`);
+			// Return an empty object to make sure subsequent calls don't access properties of null
 			return {};
 		}
 		);
