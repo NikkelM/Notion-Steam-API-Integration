@@ -31,10 +31,31 @@
 			"type": "boolean",
 			"default": false
 		},
-		"notionProperties": {
+		"gameProperties": {
 			"description": "Which game properties should be fetched when a new Steam game is detected, and the name of the corresponding field in the Notion database.",
 			"type": "object",
-			"default": {},
+			"default": {
+				"gameName": {
+					"enabled": true,
+					"notionProperty": "Game Name",
+					"isPageTitle": true
+				},
+				"coverImage": true,
+				"gameIcon": true,
+				"releaseDate": {
+					"enabled": true,
+					"notionProperty": "Release Date",
+					"format": "date"
+				},
+				"reviewScore": {
+					"enabled": true,
+					"notionProperty": "Review Score"
+				},
+				"tags": {
+					"enabled": true,
+					"notionProperty": "Tags"
+				}
+			},
 			"additionalProperties": false,
 			"minProperties": 1,
 			"properties": {
@@ -80,7 +101,7 @@
 					"default": true
 				},
 				"releaseDate": {
-					"description": "The release date of the.",
+					"description": "The release date of the game.",
 					"type": "object",
 					"default": {
 						"enabled": true,
@@ -116,7 +137,7 @@
 					]
 				},
 				"reviewScore": {
-					"description": "The user review score in percentage.",
+					"description": "The user review score from 0-100.",
 					"type": "object",
 					"default": {
 						"enabled": true,
@@ -172,6 +193,6 @@
 		"notionIntegrationKey",
 		"notionDatabaseId",
 		"updateInterval",
-		"notionProperties"
+		"gameProperties"
 	]
 }

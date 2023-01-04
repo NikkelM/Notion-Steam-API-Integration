@@ -4,7 +4,7 @@
 	"notionDatabaseId": "<databaseId>",
 	"updateInterval": 60000,
 	"forceReset": false,
-	"notionProperties": {
+	"gameProperties": {
 		"gameName": {
 			"enabled": true,
 			"notionProperty": "Game Name",
