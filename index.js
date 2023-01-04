@@ -61,9 +61,7 @@ if (!fs.existsSync(__dirname + '/backend/localDatabase.json') || CONFIG.forceRes
 // A JSON Object to hold all games in the Notion database
 let localDatabase = JSON.parse(fs.readFileSync(__dirname + '/backend/localDatabase.json'));
 
-if (localDatabase.lastUpdatedAt) {
-	console.log(`Local database was last updated at ${localDatabase.lastUpdatedAt} UTC.\n`);
-} else {
+if (!localDatabase.lastUpdatedAt) {
 	localDatabase.lastUpdatedAt = new Date(0).toISOString();
 	console.log("Successfully initialized local database.\n");
 }
@@ -89,27 +87,45 @@ steamClient.logOn();
 
 // Gets app info directly from the Steam store API
 // Does not offer all info that the SteamUser API does
-async function getSteamAppInfoDirect(appId) {
-	return await fetch(`https://store.steampowered.com/api/appdetails?appids=${appId}`)
+// For some apps, the API does not return any info, even though the app exists
+async function getSteamAppInfoDirect(appId, retryCount = 0) {
+	const result = await fetch(`https://store.steampowered.com/api/appdetails/?appids=${appId}`)
 		.then(response => response.json())
 		.then(data => {
-			if (data[appId].success) {
+			if (data && data[appId]?.success) {
 				return data[appId].data;
 			}
-			console.log(`Failed to get app info for app ${appId} from the Steam store API. It is likely that the app is not available in your region. Some info may still be available using the SteamUser API.`)
-			return {};
+			return null;
 		}
 		);
+
+	// If the request failed, we try again
+	if (!result && retryCount < 3) {
+		retryCount++;
+		console.log(`Failed to get app info for app ${appId} from the Steam store API. Retrying in ${retryCount} second(s)...`);
+		await new Promise(r => setTimeout(r, retryCount * 1000));
+		return getSteamAppInfoDirect(appId, retryCount);
+	} else if (retryCount >= 3) {
+		console.log(`Failed to get app info for app ${appId} from the Steam store API. Some info may still be available using the SteamUser API.`);
+		return {};
+	}
+
+	return result;
 }
 
 // Gets app info from the SteamUser API
 // Does not offer all info that the Steam store API does
-async function getSteamAppInfoSteamUser(appId) {
+async function getSteamAppInfoSteamUser(appIds) {
+	console.log(`Getting app info from SteamUser API for ${appIds.length} games...`);
+
 	return new Promise(async (resolve) => {
 		// Passing true as the third argument automatically requests access tokens, which are required for some apps
-		let response = await steamClient.getProductInfo([appId], [], true);
+		let response = await steamClient.getProductInfo(appIds, [], true);
 
-		const result = response.apps[appId].appinfo;
+		let result = {};
+		for (const key of Object.keys(response.apps)) {
+			result[key] = response.apps[key].appinfo.common;
+		}
 
 		resolve(result);
 	});
@@ -144,23 +160,40 @@ async function findChangesAndAddDetails() {
 	// Do this before fetching to make sure we don't miss changes made between now and fetching new properties below
 	// Subtract 60 more seconds to make sure we have some buffer in case things get changed inbetween executions
 	const newLastUpdatedAt = new Date(Date.now() - 60000).toISOString();
+	// If we encounter an error or would hit the Steam API request limit, we don't want to update the timestamp to find the games we missed again
 	let hadError = false;
+	let hitSteamAPILimit = false;
 
 	// Get the games currently in the database
-	const newGamesInNotionDatabase = await getGamesFromDatabase();
+	let newGamesInNotionDatabase = await getGamesFromDatabase();
 
-	// Iterate over the current games and compare them to games in our local store (localDatabase)
-	for (const [pageId, steamAppId] of Object.entries(newGamesInNotionDatabase)) {
-		// If this game hasn't been seen before
-		if (!(pageId in localDatabase)) {
+	// Remove all games from newGamesInNotionDatabase that are already in the localDatabase
+	console.log("Removing games that are already in the local database...");
+	for (const pageId of Object.keys(newGamesInNotionDatabase)) {
+		if (pageId in localDatabase) {
+			delete newGamesInNotionDatabase[pageId];
+		}
+	}
+
+	// Limit the number of games to avoid hitting the Steam API rate limit
+	if (Object.keys(newGamesInNotionDatabase).length > 50) {
+		console.log(`Found ${Object.keys(newGamesInNotionDatabase).length} new games in the Notion database. The Steam API limits the allowed amount of requests in quick succession. Some games will be updated later.\n`);
+		hitSteamAPILimit = true;
+		newGamesInNotionDatabase = Object.fromEntries(Object.entries(newGamesInNotionDatabase).slice(0, 50));
+	}
+
+	if (Object.keys(newGamesInNotionDatabase).length > 0) {
+		// Get info about the new games from the SteamUser API
+		const appInfoSteamUser = await getSteamAppInfoSteamUser(Object.values(newGamesInNotionDatabase)).then((appInfoSteamUser) => { return appInfoSteamUser; });
+
+		// Update the Notion database with the new properties
+		let gamesThisBatch = 0;
+		for (const [pageId, steamAppId] of Object.entries(newGamesInNotionDatabase)) {
 			try {
-				console.log(`New game found with Steam App ID: ${steamAppId}`);
+				console.log(`Updating properties for game with Steam App ID ${steamAppId}`);
 
 				// Get info about this game from the Steam API
 				const appInfoDirect = await getSteamAppInfoDirect(steamAppId);
-
-				// Get info about this game from the SteamUser API
-				const appInfoSteamUser = await getSteamAppInfoSteamUser(steamAppId).then((appInfoSteamUser) => { return appInfoSteamUser; });
 
 				// The properties that will be passed to the Notion API call
 				let properties = {};
@@ -170,7 +203,7 @@ async function findChangesAndAddDetails() {
 				if (CONFIG.gameProperties.gameName?.enabled) {
 					const gameTitle = appInfoDirect.name
 						? appInfoDirect.name
-						: appInfoSteamUser.common.name;
+						: appInfoSteamUser[steamAppId].name;
 
 					const propertyType = CONFIG.gameProperties.gameName.isPageTitle ? "title" : "rich_text";
 
@@ -190,8 +223,8 @@ async function findChangesAndAddDetails() {
 					// Get the URL for the cover image. Default value has a Steam theme
 					const coverUrl = appInfoDirect.header_image
 						? appInfoDirect.header_image
-						: (appInfoSteamUser.common.header_image?.english
-							? `https://cdn.cloudflare.steamstatic.com/steam/apps/${steamAppId}/${appInfoSteamUser.common.header_image.english}`
+						: (appInfoSteamUser[steamAppId].header_image?.english
+							? `https://cdn.cloudflare.steamstatic.com/steam/apps/${steamAppId}/${appInfoSteamUser[steamAppId].header_image.english}`
 							: "https://www.metal-hammer.de/wp-content/uploads/2022/11/22/19/steam-logo.jpg");
 
 					cover = {
@@ -205,7 +238,7 @@ async function findChangesAndAddDetails() {
 				if (CONFIG.gameProperties.gameIcon) {
 					// Get the URL for the game icon. Default value has a Steam theme
 					// Game icon URL is not available through the Steam store API, so we have to use the SteamUser API
-					const iconUrl = appInfoSteamUser.common.icon ? `https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/${steamAppId}/${appInfoSteamUser.common.icon}.jpg` : "https://iconarchive.com/download/i75918/martz90/circle/steam.ico";
+					const iconUrl = appInfoSteamUser[steamAppId].icon ? `https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/${steamAppId}/${appInfoSteamUser[steamAppId].icon}.jpg` : "https://iconarchive.com/download/i75918/martz90/circle/steam.ico";
 
 					icon = {
 						"type": "external",
@@ -219,12 +252,12 @@ async function findChangesAndAddDetails() {
 					// Get the release date. If no release date is available, use the Unix epoch
 					// The releaseDate format from the Steam API is not in ISO format, so we use the SteamUser API instead
 					let releaseDate;
-					if (appInfoSteamUser.common.original_release_date) {
-						releaseDate = new Date(parseInt(appInfoSteamUser.common.original_release_date) * 1000).toISOString();
-					} else if (appInfoSteamUser.common.steam_release_date) {
-						releaseDate = new Date(parseInt(appInfoSteamUser.common.steam_release_date) * 1000).toISOString();
-					} else if (appInfoSteamUser.common.store_asset_mtime) {
-						releaseDate = new Date(parseInt(appInfoSteamUser.common.store_asset_mtime) * 1000).toISOString();
+					if (appInfoSteamUser[steamAppId].original_release_date) {
+						releaseDate = new Date(parseInt(appInfoSteamUser[steamAppId].original_release_date) * 1000).toISOString();
+					} else if (appInfoSteamUser[steamAppId].steam_release_date) {
+						releaseDate = new Date(parseInt(appInfoSteamUser[steamAppId].steam_release_date) * 1000).toISOString();
+					} else if (appInfoSteamUser[steamAppId].store_asset_mtime) {
+						releaseDate = new Date(parseInt(appInfoSteamUser[steamAppId].store_asset_mtime) * 1000).toISOString();
 					} else {
 						releaseDate = new Date(0);
 					}
@@ -243,7 +276,7 @@ async function findChangesAndAddDetails() {
 				if (CONFIG.gameProperties.reviewScore?.enabled) {
 					// Get the Steam user review score as a percentage
 					// The reviewScore is not available through the Steam store API, so we have to use the SteamUser API instead
-					const steamReviewScore = appInfoSteamUser.common.review_percentage ? parseInt(appInfoSteamUser.common.review_percentage) / 100 : null;
+					const steamReviewScore = appInfoSteamUser[steamAppId].review_percentage ? parseInt(appInfoSteamUser[steamAppId].review_percentage) / 100 : null;
 
 					properties[CONFIG.gameProperties.reviewScore.notionProperty] = {
 						"number": steamReviewScore
@@ -253,7 +286,7 @@ async function findChangesAndAddDetails() {
 				if (CONFIG.gameProperties.tags?.enabled) {
 					// Parse the tags from the Steam API. If no tags are found, set a "No tags found" placeholder
 					// The tags are not available through the Steam store API, so we have to use the SteamUser API instead
-					const tags = appInfoSteamUser.common.store_tags ? await getSteamTagNames(appInfoSteamUser.common.store_tags).then((tags) => { return tags; }) : ["No tags found"];
+					const tags = appInfoSteamUser[steamAppId].store_tags ? await getSteamTagNames(appInfoSteamUser[steamAppId].store_tags).then((tags) => { return tags; }) : ["No tags found"];
 
 					properties[CONFIG.gameProperties.tags.notionProperty] = {
 						"multi_select": tags.map((tag) => {
@@ -280,7 +313,7 @@ async function findChangesAndAddDetails() {
 				}
 
 				// Update the game's page in the database with the new info
-				await notion.pages.update({
+				notion.pages.update({
 					page_id: pageId,
 					properties: properties,
 					cover: cover,
@@ -290,21 +323,28 @@ async function findChangesAndAddDetails() {
 				// Add this game to the local database
 				// Do this after all the rest to make sure we don't add a game to the local database if something goes wrong
 				localDatabase[pageId] = steamAppId;
+
+				gamesThisBatch++;
+				if (gamesThisBatch >= 10) {
+					// Write the updated local store to disk in batches of 10 games to prevent data loss
+					fs.writeFileSync(__dirname + '/backend/localDatabase.json', JSON.stringify(localDatabase, null, 2));
+					gamesThisBatch = 0;
+				}
 			} catch (error) {
 				console.error(error);
 				hadError = true;
 			}
 		}
-	}
 
-	// Only update the last updated time if there were no errors during execution
-	// This makes sure that we can find the games that had errors again the next time
-	if (!hadError) {
-		localDatabase.lastUpdatedAt = newLastUpdatedAt;
-	}
+		// Only update the last updated time if there were no errors during execution
+		// This makes sure that we can find the games that had errors again the next time
+		if (!hadError && !hitSteamAPILimit) {
+			localDatabase.lastUpdatedAt = newLastUpdatedAt;
+		}
 
-	// Write the updated local store to disk
-	fs.writeFileSync(__dirname + '/backend/localDatabase.json', JSON.stringify(localDatabase, null, 2));
+		// Write the updated local store to disk
+		fs.writeFileSync(__dirname + '/backend/localDatabase.json', JSON.stringify(localDatabase, null, 2));
+	}
 
 	console.log(`Done looking for changes in Notion database. Looking again in ${updateInterval / 60000} minute(s).\n`);
 
