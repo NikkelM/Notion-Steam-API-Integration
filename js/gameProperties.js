@@ -4,7 +4,7 @@ import { CONFIG } from './utils.js';
 const DEFAULT_COVER_URL = "https://www.metal-hammer.de/wp-content/uploads/2022/11/22/19/steam-logo.jpg";
 const DEFAULT_ICON_URL = "https://iconarchive.com/download/i75918/martz90/circle/steam.ico";
 
-export async function getGameProperties(appInfoDirect, appInfoSteamUser) {
+export async function getGameProperties(appInfoDirect, appInfoSteamUser, steamAppId) {
 	let outputProperties = {};
 	// Set the default cover and icon
 	let cover = {
@@ -23,7 +23,7 @@ export async function getGameProperties(appInfoDirect, appInfoSteamUser) {
 	for (const [propertyName, propertyValue] of Object.entries(CONFIG.gameProperties)) {
 		switch (propertyName) {
 			case "gameName":
-				outputProperties = getGameNameProperty(propertyValue, appInfoDirect, appInfoSteamUser, outputProperties);
+				outputProperties = getGameNameProperty(propertyValue, appInfoSteamUser, outputProperties);
 				break;
 			case "releaseDate":
 				outputProperties = getGameReleaseDate(propertyValue, appInfoSteamUser, outputProperties);
@@ -38,7 +38,7 @@ export async function getGameProperties(appInfoDirect, appInfoSteamUser) {
 				outputProperties = getGameDescription(propertyValue, appInfoDirect, outputProperties);
 				break;
 			case "storePage":
-				outputProperties = getGameStorePage(propertyValue, appInfoSteamUser, outputProperties);
+				outputProperties = getGameStorePage(propertyValue, steamAppId, outputProperties);
 				break;
 			case "coverImage":
 				cover = getGameCoverImage(propertyValue, appInfoDirect, appInfoSteamUser) ?? cover;
@@ -56,12 +56,12 @@ export async function getGameProperties(appInfoDirect, appInfoSteamUser) {
 	}
 }
 
-function getGameNameProperty(nameProperty, appInfoDirect, appInfoSteamUser, outputProperties) {
+function getGameNameProperty(nameProperty, appInfoSteamUser, outputProperties) {
 	if (!nameProperty.enabled) { return outputProperties; }
 
-	const gameTitle = appInfoDirect.name
-		? appInfoDirect.name
-		: appInfoSteamUser.name;
+	const gameTitle = appInfoSteamUser.name
+		? appInfoSteamUser.name
+		: null;
 
 	const propertyType = nameProperty.isPageTitle
 		? "title"
@@ -202,11 +202,11 @@ function getGameDescription(gameDescriptionProperty, appInfoDirect, outputProper
 	return outputProperties;
 }
 
-function getGameStorePage(storePageProperty, appInfoSteamUser, outputProperties) {
+function getGameStorePage(storePageProperty, steamAppId, outputProperties) {
 	if (!storePageProperty.enabled) { return outputProperties; }
 
 	outputProperties[storePageProperty.notionProperty] = {
-		"url": `https://store.steampowered.com/app/${appInfoSteamUser.gameid}`
+		"url": `https://store.steampowered.com/app/${steamAppId}`
 	}
 
 	return outputProperties;

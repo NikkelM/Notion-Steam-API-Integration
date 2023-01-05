@@ -1,7 +1,14 @@
 import fs from 'fs';
 import jsonschema from 'jsonschema';
 
-// ----- Config -----
+// ---------- Exported variables ----------
+
+export const CONFIG = getConfig();
+export let localDatabase = loadLocalDatabase();
+export const storeAPIRequired = isStoreAPIRequired();
+export const steamUserAPIRequired = isSteamUserAPIRequired();
+
+// ---------- Config ----------
 
 // Load the config file and validate it
 function getConfig() {
@@ -33,7 +40,7 @@ function getConfig() {
 	return CONFIG;
 }
 
-// ----- Local Database -----
+// ---------- Local Database ----------
 
 // Load the contents of the local database
 function loadLocalDatabase() {
@@ -58,7 +65,23 @@ function loadLocalDatabase() {
 	return localDatabase;
 }
 
-// ---------- Exported variables ----------
+// ---------- Required APIs ----------
 
-export const CONFIG = getConfig();
-export let localDatabase = loadLocalDatabase();
+function isStoreAPIRequired() {
+	const propertiesRequiringStoreAPI = [
+		"coverImage",
+		"gameDescription"
+	];
+	return propertiesRequiringStoreAPI.some(property => Object.keys(CONFIG.gameProperties).includes(property));
+}
+
+function isSteamUserAPIRequired() {
+	const propertiesRequiringSteamUserAPI = [
+		"gameName",
+		"releaseDate",
+		"reviewScore",
+		"tags",
+		"gameIcon"
+	];
+	return propertiesRequiringSteamUserAPI.some(property => Object.keys(CONFIG.gameProperties).includes(property));
+}

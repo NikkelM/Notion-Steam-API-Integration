@@ -7,7 +7,7 @@ process.removeAllListeners('warning');
 import fs from 'fs';
 
 import { getSteamAppInfoDirect, getSteamAppInfoSteamUser } from './js/steamAPI.js';
-import { CONFIG, localDatabase } from './js/utils.js';
+import { CONFIG, localDatabase, storeAPIRequired, steamUserAPIRequired } from './js/utils.js';
 import { getGamesFromDatabase, updateNotionPage } from './js/notion.js';
 import { getGameProperties } from './js/gameProperties.js';
 
@@ -51,20 +51,24 @@ async function updateNotionDatabase() {
 	}
 
 	if (Object.keys(newGamesInNotionDatabase).length > 0) {
-		// Get info about the new games from the SteamUser API
-		const appInfoSteamUser = await getSteamAppInfoSteamUser(Object.values(newGamesInNotionDatabase)).then((appInfoSteamUser) => { return appInfoSteamUser; });
+		// Get info about the new games from the SteamUser API, if required
+		const appInfoSteamUser = steamUserAPIRequired
+			? await getSteamAppInfoSteamUser(Object.values(newGamesInNotionDatabase)).then((appInfoSteamUser) => { return appInfoSteamUser; })
+			: null;
 
 		let gamesThisBatch = 0;
 
 		// Update the Notion database with the new properties
 		for (const [pageId, steamAppId] of Object.entries(newGamesInNotionDatabase)) {
 			try {
-				console.log(`Updating properties for game with Steam App ID ${steamAppId}`);
+				console.log(`Setting properties for game with Steam App ID ${steamAppId}`);
 
-				// Get info about this game from the Steam API
-				const appInfoDirect = await getSteamAppInfoDirect(steamAppId);
+				// Get info about this game from the Steam API, if required
+				const appInfoDirect = storeAPIRequired
+					? await getSteamAppInfoDirect(steamAppId)
+					: null;
 
-				let notionProperties = await getGameProperties(appInfoDirect, appInfoSteamUser[steamAppId]);
+				let notionProperties = await getGameProperties(appInfoDirect, appInfoSteamUser[steamAppId], steamAppId);
 
 				updateNotionPage(pageId, notionProperties);
 
