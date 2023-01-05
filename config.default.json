@@ -23,7 +23,8 @@
 		},
 		"tags": {
 			"enabled": true,
-			"notionProperty": "Tags"
+			"notionProperty": "Tags",
+			"tagLanguage": "english"
 		},
 		"gameDescription": {
 			"enabled": true,

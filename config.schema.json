@@ -166,7 +166,8 @@
 					"type": "object",
 					"default": {
 						"enabled": true,
-						"notionProperty": "Tags"
+						"notionProperty": "Tags",
+						"tagLanguage": "english"
 					},
 					"additionalProperties": false,
 					"properties": {
@@ -179,11 +180,17 @@
 							"description": "The name of the Notion property to set the tags in. This field must be of type \"multi-select\".",
 							"type": "string",
 							"default": "Tags"
+						},
+						"tagLanguage": {
+							"description": "The language of the tags, e.g. \"english\" or \"spanish\".",
+							"type": "string",
+							"default": "english"
 						}
 					},
 					"required": [
 						"enabled",
-						"notionProperty"
+						"notionProperty",
+						"tagLanguage"
 					]
 				},
 				"gameDescription": {

@@ -288,7 +288,8 @@ The user-defined tags of the game as they can be seen on the store page.
 ```json
 "tags": {
 	"enabled": true,
-	"notionProperty": "Tags"
+	"notionProperty": "Tags",
+	"language": "english"
 }
 ```
 
@@ -309,6 +310,15 @@ The name of the Notion property to set the tags in. This field must be of type "
 | Type | Default value | Possible values | Required |
 |---|---|---|---|
 | `string` | `"Tags"` | A valid Notion property name | Yes |
+
+<h4><code>language</code></h4>
+
+The language of the tags, e.g. "english" or "spanish".
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `string` | `"english"` | Valid language names. Invalid names return an error from the Steam API. | Yes |
+
 </details>
 
 <details>
