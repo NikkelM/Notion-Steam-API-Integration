@@ -37,7 +37,7 @@
 			"default": {
 				"gameName": {
 					"enabled": true,
-					"notionProperty": "Game Name",
+					"notionProperty": "Name",
 					"isPageTitle": true
 				},
 				"coverImage": true,
@@ -54,6 +54,18 @@
 				"tags": {
 					"enabled": true,
 					"notionProperty": "Tags"
+				},
+				"gameDescription": {
+					"enabled": true,
+					"notionProperty": "Description"
+				},
+				"storePage": {
+					"enabled": true,
+					"notionProperty": "Store Page"
+				},
+				"gamePrice": {
+					"enabled": true,
+					"notionProperty": "Price"
 				}
 			},
 			"additionalProperties": false,
@@ -64,7 +76,7 @@
 					"type": "object",
 					"default": {
 						"enabled": true,
-						"notionProperty": "Game Name",
+						"notionProperty": "Name",
 						"isPageTitle": true
 					},
 					"additionalProperties": false,
@@ -77,7 +89,7 @@
 						"notionProperty": {
 							"description": "The name of the Notion property to set the game name in.",
 							"type": "string",
-							"default": "Game Name"
+							"default": "Name"
 						},
 						"isPageTitle": {
 							"description": "Indicates if this property is the \"Title\" of the Notion page or not.",
@@ -198,7 +210,7 @@
 					"type": "object",
 					"default": {
 						"enabled": true,
-						"notionProperty": "Game Description"
+						"notionProperty": "Description"
 					},
 					"additionalProperties": false,
 					"properties": {
@@ -210,7 +222,7 @@
 						"notionProperty": {
 							"description": "The name of the Notion property to set the description in.",
 							"type": "string",
-							"default": "Game Description"
+							"default": "Description"
 						}
 					},
 					"required": [
@@ -236,6 +248,31 @@
 							"description": "The name of the Notion property to set the store page URL in.",
 							"type": "string",
 							"default": "Store Page"
+						}
+					},
+					"required": [
+						"enabled",
+						"notionProperty"
+					]
+				},
+				"gamePrice": {
+					"description": "The price of the game on Steam. Does not account for current sales or discounts (as this data would be outdated too quickly). The currency depends on your current country.",
+					"type": "object",
+					"default": {
+						"enabled": true,
+						"notionProperty": "Price"
+					},
+					"additionalProperties": false,
+					"properties": {
+						"enabled": {
+							"description": "Whether or not the price of the game should be set in the database.",
+							"type": "boolean",
+							"default": true
+						},
+						"notionProperty": {
+							"description": "The name of the Notion property to set the price in.",
+							"type": "string",
+							"default": "Price"
 						}
 					},
 					"required": [

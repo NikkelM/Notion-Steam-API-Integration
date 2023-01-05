@@ -390,3 +390,38 @@ The name of the Notion property to set the store page URL in.
 |---|---|---|---|
 | `string` | `"Store Page"` | A valid Notion property name | Yes |
 </details>
+
+<details>
+<summary><code>gamePrice</code></summary>
+
+The price of the game on Steam. Does not account for current sales or discounts (as this data would be outdated too quickly). The currency depends on your current country.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `object` | See item below | See sections below | No |
+
+```json
+"gamePrice": {
+	"enabled": true,
+	"notionProperty": "Price"
+}
+```
+
+<h3>Possible values</h3>
+
+<h4><code>enabled</code></h4>
+
+Whether or not the price of the game should be set in the database.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `boolean` | `true` | `true` or `false` | Yes |
+
+<h4><code>notionProperty</code></h4>
+
+The name of the Notion property to set the price in.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `string` | `"Price"` | A valid Notion property name | Yes |
+</details>
