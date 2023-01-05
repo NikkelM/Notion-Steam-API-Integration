@@ -167,7 +167,7 @@ async function getGameTags(tagsProperty, appInfoSteamUser, outputProperties) {
 	// Parse the tags from the Steam API. If no tags are found, set a "No tags found" placeholder
 	// The tags are not available through the Steam store API, so we have to use the SteamUser API instead
 	const tags = appInfoSteamUser.store_tags
-		? await getSteamTagNames(appInfoSteamUser.store_tags).then((tags) => { return tags; })
+		? await getSteamTagNames(appInfoSteamUser.store_tags, tagsProperty.tagLanguage).then((tags) => { return tags; })
 		: ["No tags found"];
 
 	outputProperties[tagsProperty.notionProperty] = {

@@ -52,16 +52,17 @@ export async function getSteamAppInfoSteamUser(appIds) {
 	});
 }
 
-export async function getSteamTagNames(storeTags) {
+export async function getSteamTagNames(storeTags, tagLanguage) {
 	const tagIds = Object.keys(storeTags).map(function (key) {
 		return storeTags[key];
 	});
 
 	return new Promise(async (resolve) => {
-		let response = await steamClient.getStoreTagNames("english", tagIds);
+		let response = await steamClient.getStoreTagNames(tagLanguage, tagIds);
+
 
 		const result = Object.keys(response.tags).map(function (key) {
-			return response.tags[key].englishName;
+			return response.tags[key].name;
 		});
 
 		resolve(result);
