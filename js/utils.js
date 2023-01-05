@@ -28,6 +28,7 @@ function getConfig() {
 
 	const CONFIG = JSON.parse(fs.readFileSync(configFileName));
 
+	// Validate the config file
 	console.log("Validating configuration file...\n");
 	try {
 		const validator = new jsonschema.Validator();

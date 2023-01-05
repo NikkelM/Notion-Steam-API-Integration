@@ -59,3 +59,23 @@ export function updateNotionPage(pageId, properties) {
 		icon: properties.icon
 	});
 }
+
+// Sends a simple request to the database to check if all properties exist in the database
+export async function checkNotionPropertiesExistence() {
+	const properties = Object.values(CONFIG.gameProperties).map(property => {
+		// Skip properties that are disabled or do not have a notionProperty value (e.g. coverImage)
+		if (!property.enabled || !property.notionProperty) { return; }
+		return property.notionProperty
+	}).filter(property => property !== undefined);
+
+	const response = await NOTION.databases.retrieve({
+		database_id: databaseId
+	});
+
+	for (const property of properties) {
+		if (!response.properties[property]) {
+			console.error(`Error validating configuration file: Notion database does not contain the property "${property}" specified in the configuration file.`);
+			process.exit(1);
+		}
+	}
+}

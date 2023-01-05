@@ -8,8 +8,13 @@ import fs from 'fs';
 
 import { getSteamAppInfoDirect, getSteamAppInfoSteamUser } from './js/steamAPI.js';
 import { CONFIG, localDatabase, storeAPIRequired, steamUserAPIRequired } from './js/utils.js';
-import { getGamesFromDatabase, updateNotionPage } from './js/notion.js';
+import { getGamesFromDatabase, updateNotionPage, checkNotionPropertiesExistence } from './js/notion.js';
 import { getGameProperties } from './js/gameProperties.js';
+
+// ---------- Setup ----------
+
+// We need to do this here because of circular imports
+await checkNotionPropertiesExistence()
 
 const updateInterval = CONFIG.updateInterval;
 
