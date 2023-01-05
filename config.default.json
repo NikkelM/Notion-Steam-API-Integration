@@ -7,7 +7,7 @@
 	"gameProperties": {
 		"gameName": {
 			"enabled": true,
-			"notionProperty": "Game Name",
+			"notionProperty": "Name",
 			"isPageTitle": true
 		},
 		"coverImage": true,
@@ -28,11 +28,15 @@
 		},
 		"gameDescription": {
 			"enabled": true,
-			"notionProperty": "Game Description"
+			"notionProperty": "Description"
 		},
 		"storePage": {
 			"enabled": true,
 			"notionProperty": "Store Page"
+		},
+		"gamePrice": {
+			"enabled": true,
+			"notionProperty": "Price"
 		}
 	}
 }
