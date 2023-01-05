@@ -58,13 +58,17 @@ export async function getSteamTagNames(storeTags, tagLanguage) {
 	});
 
 	return new Promise(async (resolve) => {
-		let response = await steamClient.getStoreTagNames(tagLanguage, tagIds);
+		try {
+			const response = await steamClient.getStoreTagNames(tagLanguage, tagIds);
 
-
-		const result = Object.keys(response.tags).map(function (key) {
-			return response.tags[key].name;
-		});
-
-		resolve(result);
+			const result = Object.keys(response.tags).map(function (key) {
+				return response.tags[key].name;
+			});
+	
+			resolve(result);
+		} catch (error) {
+			console.log("Retrieving tag names failed. The most likely cause is that the language you provided is invalid and does not yield any results from the Steam API.");
+			resolve(["Retrieving tags failed"]);
+		}
 	});
 }
