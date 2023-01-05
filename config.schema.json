@@ -256,7 +256,7 @@
 					]
 				},
 				"gamePrice": {
-					"description": "The price of the game in the store. Does not account for current sales or discounts (as this data would be outdated too quickly). The currency depends on your current country.",
+					"description": "The price of the game on Steam. Does not account for current sales or discounts (as this data would be outdated too quickly). The currency depends on your current country.",
 					"type": "object",
 					"default": {
 						"enabled": true,
