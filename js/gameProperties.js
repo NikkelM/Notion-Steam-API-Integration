@@ -46,6 +46,9 @@ export async function getGameProperties(appInfoDirect, appInfoSteamUser, steamAp
 			case "gameIcon":
 				icon = getGameIcon(propertyValue, appInfoSteamUser) ?? icon;
 				break;
+			case "gamePrice":
+				outputProperties = getGamePrice(propertyValue, appInfoDirect, outputProperties);
+				break;
 		}
 	}
 
@@ -207,6 +210,20 @@ function getGameStorePage(storePageProperty, steamAppId, outputProperties) {
 
 	outputProperties[storePageProperty.notionProperty] = {
 		"url": `https://store.steampowered.com/app/${steamAppId}`
+	}
+
+	return outputProperties;
+}
+
+function getGamePrice(priceProperty, appInfoDirect, outputProperties) {
+	if (!priceProperty.enabled) { return outputProperties; }
+
+	const price = appInfoDirect.price_overview
+		? appInfoDirect.price_overview.initial / 100
+		: null;
+
+	outputProperties[priceProperty.notionProperty] = {
+		"number": price
 	}
 
 	return outputProperties;

@@ -71,7 +71,8 @@ function loadLocalDatabase() {
 function isStoreAPIRequired() {
 	const propertiesRequiringStoreAPI = [
 		"coverImage",
-		"gameDescription"
+		"gameDescription",
+		"gamePrice"
 	];
 	return propertiesRequiringStoreAPI.some(property => Object.keys(CONFIG.gameProperties).includes(property));
 }
