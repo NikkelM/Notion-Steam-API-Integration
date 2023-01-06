@@ -3,6 +3,7 @@
 	"notionIntegrationKey": "<secretKey>",
 	"notionDatabaseId": "<databaseId>",
 	"updateInterval": 60000,
+	"steamAppIdProperty": "Steam App ID",
 	"forceReset": false,
 	"gameProperties": {
 		"gameName": {

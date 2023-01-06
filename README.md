@@ -3,7 +3,6 @@
 ![Notion Steam API Integration banner](images/NotionSteamAPIIntegration.png)
 
 Notion integration for automatically updating database entries containing a `Steam App ID` with data from the Steam API.
-Given a `Steam App ID`, the integration fetches data from the Steam API and fills in a number of pre-determined database fields with the corresponding data.
 
 ## Setup
 
@@ -25,11 +24,11 @@ After providing the `config.json` [configuration](#configuration) file, you can 
 node index.js
 ```
 
-The integration will search the database for new entries that have the `Steam App ID` field set to a value other than `null` and then fetch the corresponding data from the Steam API.
-Following this, the database entry will be updated with cleaned up data from the API, such as Steam user review scores and the game's tags.
+The integration will search the database for new entries that have the `Steam App ID` field (the name of this property must be defined in the configuration file) set to a value other than `null` and then fetch the corresponding data from the Steam API.
+Following this, the database entry will be updated with cleaned up data from the API, such as Steam user review scores or the game's tags, following the provided configuration.
 
 You are able to have the integration running in the background whilst editing the database.
-You can also have database entries without the `Steam App ID` set, these will be ignored by the integration.
+You can also have database entries without the `Steam App ID` field set, these will be ignored by the integration.
 
 If you change the configuration to include new game properties, you will need to run the integration with the `forceReset` flag set to `true` in the configuration, in order to also set the new value for all previously discovered games.
 
@@ -84,6 +83,15 @@ The interval in which the integration will check for updates to your Notion data
 |---|---|---|---|
 | `integer` | 60000 | Integers >= 60000 | Yes |
 </details>
+
+<details>
+<summary><code>steamAppIdProperty</code></summary>
+
+The name of the property in your Notion database that contains the Steam App ID of the games.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `string` | `"Steam App ID"` | Any string | Yes |
 
 <details>
 <summary><code>forceReset</code></summary>
