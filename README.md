@@ -1,6 +1,6 @@
 # Notion Steam API Integration
 
-![Notion Steam API Integration banner](images/NotionSteamAPIIntegration.png)
+![Notion Steam API Integration banner](images/NotionSteamAPIIntegrationBanner.png)
 
 Notion integration for automatically updating database entries containing a `Steam App ID` with data from the Steam API.
 
