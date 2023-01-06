@@ -25,7 +25,7 @@ function main() {
 main();
 
 async function updateNotionDatabase() {
-	console.log("Looking for changes in Notion database...\n");
+	console.log("Looking for changes in Notion database...");
 
 	// Update the last updated timestamp
 	// Do this before fetching to make sure we don't miss changes made between now and fetching new properties below
@@ -39,17 +39,13 @@ async function updateNotionDatabase() {
 	// Get the games currently in the Notion database
 	let updatedPagesInNotionDatabase = await getGamesFromNotionDatabase();
 
-	if (!CONFIG.alwaysUpdate) {
-		console.log("Removing games that are already present in the local database from the list of games to update...");
-		// Remove all pages from updatedPagesInNotionDatabase that are already in the local database
-		const duplicatePages = await localDatabase.getMany(Object.keys(updatedPagesInNotionDatabase));
-		for (const [pageId, steamAppId] of Object.entries(updatedPagesInNotionDatabase)) {
-			if (duplicatePages.includes(steamAppId)) {
-				delete updatedPagesInNotionDatabase[pageId];
-			}
+	console.log("Removing games that are already present in the local database from the list of games to update...\n");
+	// Remove all pages from updatedPagesInNotionDatabase that are already in the local database
+	const duplicatePages = await localDatabase.getMany(Object.keys(updatedPagesInNotionDatabase));
+	for (const [pageId, steamAppId] of Object.entries(updatedPagesInNotionDatabase)) {
+		if (duplicatePages.includes(steamAppId)) {
+			delete updatedPagesInNotionDatabase[pageId];
 		}
-	} else {
-		console.log("Updating all pages/games that were recently edited, even if they already exist in the local database.");
 	}
 
 	// Limit the number of games to avoid hitting the Steam API rate limit, if required
@@ -69,7 +65,7 @@ async function updateNotionDatabase() {
 		for (const [pageId, steamAppId] of Object.entries(updatedPagesInNotionDatabase)) {
 			try {
 				console.log(`Setting properties for game with Steam App ID ${steamAppId}`);
-
+				console.log(appInfoSteamUser[steamAppId].steam_deck_compatibility);
 				// Get info about this game from the Steam API, if required
 				const appInfoDirect = storeAPIRequired
 					? await getSteamAppInfoDirect(steamAppId)
