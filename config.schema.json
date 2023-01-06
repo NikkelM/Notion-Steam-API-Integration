@@ -36,11 +36,6 @@
 			"type": "boolean",
 			"default": false
 		},
-		"alwaysUpdate": {
-			"description": "If true, the integration will always update game properties for Notion pages that have been changed since the integration last accessed the database, even if the game already exists in the local database.",
-			"type": "boolean",
-			"default": false
-		},
 		"gameProperties": {
 			"description": "Which game properties should be fetched when a new Steam game is detected, and the name of the corresponding field in the Notion database.",
 			"type": "object",

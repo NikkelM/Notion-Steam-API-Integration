@@ -5,7 +5,6 @@
 	"updateInterval": 60000,
 	"steamAppIdProperty": "Steam App ID",
 	"forceReset": false,
-	"alwaysUpdate": false,
 	"gameProperties": {
 		"gameName": {
 			"enabled": true,
