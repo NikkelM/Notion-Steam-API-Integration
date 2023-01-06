@@ -49,6 +49,9 @@ export async function getGameProperties(appInfoDirect, appInfoSteamUser, steamAp
 			case "gamePrice":
 				outputProperties = getGamePrice(propertyValue, appInfoDirect, outputProperties);
 				break;
+			case "steamDeckCompatibility":
+				outputProperties = getSteamDeckCompatibility(propertyValue, appInfoSteamUser, outputProperties);
+				break;
 		}
 	}
 
@@ -224,6 +227,45 @@ function getGamePrice(priceProperty, appInfoDirect, outputProperties) {
 
 	outputProperties[priceProperty.notionProperty] = {
 		"number": price
+	}
+
+	return outputProperties;
+}
+
+function getSteamDeckCompatibility(steamDeckCompatibilityProperty, appInfoSteamUser, outputProperties) {
+	if (!steamDeckCompatibilityProperty.enabled) { return outputProperties; }
+
+	// if(!appInfoSteamUser.steam_deck_compatibility) { 
+	// 	outputProperties[steamDeckCompatibilityProperty.notionProperty] = {
+	// 		"options": [
+	// 			{
+	// 				"name": "Unknown"
+	// 			}
+	// 		]
+	// 	}
+
+	// 	return outputProperties; 
+	// }
+
+	let compatibility = "Unknown";
+	switch (appInfoSteamUser.steam_deck_compatibility?.category) {
+		case "1":
+			compatibility = "Unsupported";
+			break;
+		case "2":
+			compatibility = "Playable";
+			break;
+		case "3":
+			compatibility = "Verified";
+			break;
+		default:
+			compatibility = "Unknown";
+	}
+
+	outputProperties[steamDeckCompatibilityProperty.notionProperty] = {
+		"select": {
+			"name": compatibility
+		}
 	}
 
 	return outputProperties;

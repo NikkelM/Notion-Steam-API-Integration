@@ -434,3 +434,38 @@ The name of the Notion property to set the price in.
 |---|---|---|---|
 | `string` | `"Price"` | A valid Notion property name | Yes |
 </details>
+
+<details>
+<summary><code>steamDeckCompatibility</code></summary>
+
+The Steam Deck Compatibility score, which can be one of "Verified", "Playable", "Unsupported" or "Unknown".
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `object` | See item below | See sections below | No |
+
+```json
+"steamDeckCompatibility": {
+	"enabled": true,
+	"notionProperty": "Steam Deck Compatibility"
+}
+```
+
+<h3>Possible values</h3>
+
+<h4><code>enabled</code></h4>
+
+Whether or not the Steam Deck Compatibility score should be set in the database.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `boolean` | `true` | `true` or `false` | Yes |
+
+<h4><code>notionProperty</code></h4>
+
+The name of the Notion property to set the Steam Deck Compatibility score in.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `string` | `"Steam Deck Compatibility"` | A valid Notion property name | Yes |
+</details>

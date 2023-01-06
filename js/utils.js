@@ -85,6 +85,7 @@ function isSteamUserAPIRequired() {
 		CONFIG.gameProperties.releaseDate?.enabled ||
 		CONFIG.gameProperties.reviewScore?.enabled ||
 		CONFIG.gameProperties.tags?.enabled ||
-		CONFIG.gameProperties.gameIcon
+		CONFIG.gameProperties.gameIcon ||
+		CONFIG.gameProperties.steamDeckCompatibility?.enabled
 	);
 }
