@@ -26,6 +26,11 @@
 			"default": 60000,
 			"minimum": 60000
 		},
+		"steamAppIdProperty": {
+			"description": "The name of the property in your Notion database that contains the Steam App ID of the games.",
+			"type": "string",
+			"default": "Steam App ID"
+		},
 		"forceReset": {
 			"description": "If true, the integration will reset the local database, fetch all Steam App ID's from the Notion database and refresh all game properties. This may take longer, depending on the size of your Notion database.",
 			"type": "boolean",
@@ -287,6 +292,7 @@
 		"notionIntegrationKey",
 		"notionDatabaseId",
 		"updateInterval",
+		"steamAppIdProperty",
 		"gameProperties"
 	]
 }
