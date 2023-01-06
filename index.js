@@ -39,12 +39,17 @@ async function updateNotionDatabase() {
 	// Get the games currently in the Notion database
 	let updatedPagesInNotionDatabase = await getGamesFromNotionDatabase();
 
-	// Remove all pages from updatedPagesInNotionDatabase that are already in the local database
-	const duplicatePages = await localDatabase.getMany(Object.keys(updatedPagesInNotionDatabase));
-	for (const [pageId, steamAppId] of Object.entries(updatedPagesInNotionDatabase)) {
-		if (duplicatePages.includes(steamAppId)) {
-			delete updatedPagesInNotionDatabase[pageId];
+	if (!CONFIG.alwaysUpdate) {
+		console.log("Removing games that are already present in the local database from the list of games to update...");
+		// Remove all pages from updatedPagesInNotionDatabase that are already in the local database
+		const duplicatePages = await localDatabase.getMany(Object.keys(updatedPagesInNotionDatabase));
+		for (const [pageId, steamAppId] of Object.entries(updatedPagesInNotionDatabase)) {
+			if (duplicatePages.includes(steamAppId)) {
+				delete updatedPagesInNotionDatabase[pageId];
+			}
 		}
+	} else {
+		console.log("Updating all pages/games that were recently edited, even if they already exist in the local database.");
 	}
 
 	// Limit the number of games to avoid hitting the Steam API rate limit, if required
