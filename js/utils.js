@@ -1,10 +1,11 @@
 import fs from 'fs';
 import jsonschema from 'jsonschema';
+import { Level } from 'level';
 
 // ---------- Exported variables ----------
 
 export const CONFIG = getConfig();
-export let localDatabase = loadLocalDatabase();
+export const localDatabase = await loadLocalDatabase();
 export const storeAPIRequired = isStoreAPIRequired();
 export const steamUserAPIRequired = isSteamUserAPIRequired();
 
@@ -43,8 +44,33 @@ function getConfig() {
 
 // ---------- Local Database ----------
 
+async function loadLocalDatabase() {
+	console.log("Loading local database...");
+	const db = new Level('./db', { valueEncoding: 'json' });
+
+	// Reset the local database if the user wants to
+	if (CONFIG.forceReset) {
+		console.log("Resetting local database...");
+		await db.clear();
+	}
+
+	// Initialize the lastUpdatedAt property if it doesn't exist
+	try {
+		await db.get('lastUpdatedAt');
+	} catch (error) {
+		await db.put('lastUpdatedAt', new Date(0).toISOString());
+		console.log("Successfully initialized local database.\n");
+	}
+
+	return db;
+}
+
+export async function addGameToLocalDatabase(pageId, steamAppId) {
+	await localDatabase.put(pageId, steamAppId);
+}
+
 // Load the contents of the local database
-function loadLocalDatabase() {
+function loadLocalDatabaseDeprecated() {
 	// Create the backend directory if it doesn't exist
 	if (!fs.existsSync('backend')) {
 		fs.mkdirSync('backend');
@@ -69,21 +95,19 @@ function loadLocalDatabase() {
 // ---------- Required APIs ----------
 
 function isStoreAPIRequired() {
-	const propertiesRequiringStoreAPI = [
-		"coverImage",
-		"gameDescription",
-		"gamePrice"
-	];
-	return propertiesRequiringStoreAPI.some(property => Object.keys(CONFIG.gameProperties).includes(property));
+	return (
+		CONFIG.gameProperties.coverImage ||
+		CONFIG.gameProperties.gameDescription?.enabled ||
+		CONFIG.gameProperties.gamePrice?.enabled
+	)
 }
 
 function isSteamUserAPIRequired() {
-	const propertiesRequiringSteamUserAPI = [
-		"gameName",
-		"releaseDate",
-		"reviewScore",
-		"tags",
-		"gameIcon"
-	];
-	return propertiesRequiringSteamUserAPI.some(property => Object.keys(CONFIG.gameProperties).includes(property));
+	return (
+		CONFIG.gameProperties.gameName?.enabled ||
+		CONFIG.gameProperties.releaseDate?.enabled ||
+		CONFIG.gameProperties.reviewScore?.enabled ||
+		CONFIG.gameProperties.tags?.enabled ||
+		CONFIG.gameProperties.gameIcon
+	);
 }
