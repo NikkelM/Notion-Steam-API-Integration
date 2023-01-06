@@ -4,6 +4,12 @@
 
 Notion integration for automatically updating database entries containing a `Steam App ID` with data from the Steam API.
 
+## Related projects
+
+You can find the Steam App ID's for any number of games using just their names with the [Steam App ID Finder](https://github.com/NikkelM/Steam-App-ID-Finder). Useful for games you own on other platforms, such as the Epic Games Launcher or GOG.
+
+Do you want to add games that are available on Game Pass to your Notion database? Use the [Game Pass API](https://github.com/NikkelM/Game-Pass-API) to get the data you need.
+
 ## Setup
 
 Run `npm install` to install the required dependencies first.
