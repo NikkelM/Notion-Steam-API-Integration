@@ -4,13 +4,10 @@
 // Suppresses the warning about the fetch API being unstable
 process.removeAllListeners('warning');
 
-import fs from 'fs';
-
 import { getSteamAppInfoDirect, getSteamAppInfoSteamUser } from './js/steamAPI.js';
 import { CONFIG, localDatabase, addGameToLocalDatabase, storeAPIRequired, steamUserAPIRequired } from './js/utils.js';
 import { getGamesFromNotionDatabase, updateNotionPage, checkNotionPropertiesExistence } from './js/notion.js';
 import { getGameProperties } from './js/gameProperties.js';
-import { getDatabase } from '@notionhq/client/build/src/api-endpoints.js';
 
 // ---------- Setup ----------
 
@@ -42,15 +39,15 @@ async function updateNotionDatabase() {
 	// Get the games currently in the Notion database
 	let updatedPagesInNotionDatabase = await getGamesFromNotionDatabase();
 
-	const duplicatePages = await localDatabase.getMany(Object.keys(updatedPagesInNotionDatabase));
 	// Remove all pages from updatedPagesInNotionDatabase that are already in the local database
+	const duplicatePages = await localDatabase.getMany(Object.keys(updatedPagesInNotionDatabase));
 	for (const [pageId, steamAppId] of Object.entries(updatedPagesInNotionDatabase)) {
 		if (duplicatePages.includes(steamAppId)) {
 			delete updatedPagesInNotionDatabase[pageId];
 		}
 	}
 
-	// Limit the number of games to avoid hitting the Steam API rate limit
+	// Limit the number of games to avoid hitting the Steam API rate limit, if required
 	if (Object.keys(updatedPagesInNotionDatabase).length > 60 && storeAPIRequired) {
 		console.log(`Found ${Object.keys(updatedPagesInNotionDatabase).length} new/updated pages/games in the Notion database. The Steam API limits the allowed amount of requests in quick succession. Some games will be updated later.\n`);
 		hitSteamAPILimit = true;

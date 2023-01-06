@@ -69,29 +69,6 @@ export async function addGameToLocalDatabase(pageId, steamAppId) {
 	await localDatabase.put(pageId, steamAppId);
 }
 
-// Load the contents of the local database
-function loadLocalDatabaseDeprecated() {
-	// Create the backend directory if it doesn't exist
-	if (!fs.existsSync('backend')) {
-		fs.mkdirSync('backend');
-	}
-
-	// Create an empty local store of all games in the database if it doesn't exist, or the user wants to reset it
-	if (!fs.existsSync('backend/localDatabase.json') || CONFIG.forceReset) {
-		console.log("Initializing/Resetting local database...");
-		fs.writeFileSync('backend/localDatabase.json', JSON.stringify({}, null, 2));
-	}
-
-	// A JSON Object to hold all games in the Notion database
-	let localDatabase = JSON.parse(fs.readFileSync('backend/localDatabase.json'));
-
-	if (!localDatabase.lastUpdatedAt) {
-		localDatabase.lastUpdatedAt = new Date(0).toISOString();
-		console.log("Successfully initialized local database.\n");
-	}
-	return localDatabase;
-}
-
 // ---------- Required APIs ----------
 
 function isStoreAPIRequired() {
