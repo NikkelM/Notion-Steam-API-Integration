@@ -49,7 +49,7 @@ async function updateNotionDatabase() {
 
 	// Limit the number of games to avoid hitting the Steam API rate limit, if required
 	if (Object.keys(updatedPagesInNotionDatabase).length > 50 && storeAPIRequired) {
-		console.log(`Found ${Object.keys(updatedPagesInNotionDatabase).length} new/updated pages/games in the Notion database. The Steam store API limits the allowed amount of requests in quick succession. Some games will be updated later.`);
+		console.log(`Found ${Object.keys(updatedPagesInNotionDatabase).length} new/updated pages with a "Steam App ID" in the Notion database. The Steam store API limits the allowed amount of requests in quick succession. Some games will be updated later.`);
 		hitSteamAPILimit = true;
 		updatedPagesInNotionDatabase = Object.fromEntries(Object.entries(updatedPagesInNotionDatabase).slice(0, 50));
 	}
