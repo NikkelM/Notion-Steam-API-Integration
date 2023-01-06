@@ -4,11 +4,9 @@
 // Suppresses the warning about the fetch API being unstable
 process.removeAllListeners('warning');
 
-import fs from 'fs';
-
 import { getSteamAppInfoDirect, getSteamAppInfoSteamUser } from './js/steamAPI.js';
-import { CONFIG, localDatabase, storeAPIRequired, steamUserAPIRequired } from './js/utils.js';
-import { getGamesFromDatabase, updateNotionPage, checkNotionPropertiesExistence } from './js/notion.js';
+import { CONFIG, localDatabase, addGameToLocalDatabase, storeAPIRequired, steamUserAPIRequired } from './js/utils.js';
+import { getGamesFromNotionDatabase, updateNotionPage, checkNotionPropertiesExistence } from './js/notion.js';
 import { getGameProperties } from './js/gameProperties.js';
 
 // ---------- Setup ----------
@@ -27,7 +25,7 @@ function main() {
 main();
 
 async function updateNotionDatabase() {
-	console.log("Looking for changes in Notion database...");
+	console.log("Looking for changes in Notion database...\n");
 
 	// Update the last updated timestamp
 	// Do this before fetching to make sure we don't miss changes made between now and fetching new properties below
@@ -38,33 +36,32 @@ async function updateNotionDatabase() {
 	let hadError = false;
 	let hitSteamAPILimit = false;
 
-	// Get the games currently in the database
-	let newGamesInNotionDatabase = await getGamesFromDatabase();
+	// Get the games currently in the Notion database
+	let updatedPagesInNotionDatabase = await getGamesFromNotionDatabase();
 
-	// Remove all games from newGamesInNotionDatabase that are already in the localDatabase
-	for (const pageId of Object.keys(newGamesInNotionDatabase)) {
-		if (pageId in localDatabase) {
-			delete newGamesInNotionDatabase[pageId];
+	// Remove all pages from updatedPagesInNotionDatabase that are already in the local database
+	const duplicatePages = await localDatabase.getMany(Object.keys(updatedPagesInNotionDatabase));
+	for (const [pageId, steamAppId] of Object.entries(updatedPagesInNotionDatabase)) {
+		if (duplicatePages.includes(steamAppId)) {
+			delete updatedPagesInNotionDatabase[pageId];
 		}
 	}
 
-	// Limit the number of games to avoid hitting the Steam API rate limit
-	if (Object.keys(newGamesInNotionDatabase).length > 50) {
-		console.log(`Found ${Object.keys(newGamesInNotionDatabase).length} new games in the Notion database. The Steam API limits the allowed amount of requests in quick succession. Some games will be updated later.\n`);
+	// Limit the number of games to avoid hitting the Steam API rate limit, if required
+	if (Object.keys(updatedPagesInNotionDatabase).length > 50 && storeAPIRequired) {
+		console.log(`Found ${Object.keys(updatedPagesInNotionDatabase).length} new/updated pages with a "Steam App ID" in the Notion database. The Steam store API limits the allowed amount of requests in quick succession. Some games will be updated later.`);
 		hitSteamAPILimit = true;
-		newGamesInNotionDatabase = Object.fromEntries(Object.entries(newGamesInNotionDatabase).slice(0, 50));
+		updatedPagesInNotionDatabase = Object.fromEntries(Object.entries(updatedPagesInNotionDatabase).slice(0, 50));
 	}
 
-	if (Object.keys(newGamesInNotionDatabase).length > 0) {
+	if (Object.keys(updatedPagesInNotionDatabase).length > 0) {
 		// Get info about the new games from the SteamUser API, if required
 		const appInfoSteamUser = steamUserAPIRequired
-			? await getSteamAppInfoSteamUser(Object.values(newGamesInNotionDatabase)).then((appInfoSteamUser) => { return appInfoSteamUser; })
+			? await getSteamAppInfoSteamUser(Object.values(updatedPagesInNotionDatabase)).then((appInfoSteamUser) => { return appInfoSteamUser; })
 			: null;
 
-		let gamesThisBatch = 0;
-
 		// Update the Notion database with the new properties
-		for (const [pageId, steamAppId] of Object.entries(newGamesInNotionDatabase)) {
+		for (const [pageId, steamAppId] of Object.entries(updatedPagesInNotionDatabase)) {
 			try {
 				console.log(`Setting properties for game with Steam App ID ${steamAppId}`);
 
@@ -76,31 +73,19 @@ async function updateNotionDatabase() {
 				let notionProperties = await getGameProperties(appInfoDirect, appInfoSteamUser[steamAppId], steamAppId);
 
 				updateNotionPage(pageId, notionProperties);
+				addGameToLocalDatabase(pageId, steamAppId);
 
-				// Add this game to the local database
-				// Do this after all the rest to make sure we don't add a game to the local database if something goes wrong
-				localDatabase[pageId] = steamAppId;
-
-				gamesThisBatch++;
-				if (gamesThisBatch >= 10) {
-					// Write the updated local store to disk in batches of 10 games to prevent data loss
-					fs.writeFileSync('./backend/localDatabase.json', JSON.stringify(localDatabase, null, 2));
-					gamesThisBatch = 0;
-				}
 			} catch (error) {
 				console.error(error);
 				hadError = true;
 			}
 		}
 
-		// Only update the last updated time if there were no errors during execution
-		// This makes sure that we can find the games that had errors again the next time
+		// Only update the last updated time if there were no errors during execution and we didn't hit the Steam API request limit
+		// This makes sure that we can find the games that had errors or that we had to omit again the next time
 		if (!hadError && !hitSteamAPILimit) {
-			localDatabase.lastUpdatedAt = newLastUpdatedAt;
+			localDatabase.put('lastUpdatedAt', newLastUpdatedAt);
 		}
-
-		// Write the updated local store to disk
-		fs.writeFileSync('./backend/localDatabase.json', JSON.stringify(localDatabase, null, 2));
 	}
 
 	console.log(`Done looking for changes in Notion database. Looking again in ${updateInterval / 60000} minute(s).\n`);
