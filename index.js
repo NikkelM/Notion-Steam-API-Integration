@@ -25,7 +25,7 @@ function main() {
 main();
 
 async function updateNotionDatabase() {
-	console.log("Looking for changes in Notion database...");
+	console.log("Looking for changes in Notion database...\n");
 
 	// Update the last updated timestamp
 	// Do this before fetching to make sure we don't miss changes made between now and fetching new properties below
@@ -48,10 +48,10 @@ async function updateNotionDatabase() {
 	}
 
 	// Limit the number of games to avoid hitting the Steam API rate limit, if required
-	if (Object.keys(updatedPagesInNotionDatabase).length > 60 && storeAPIRequired) {
+	if (Object.keys(updatedPagesInNotionDatabase).length > 50 && storeAPIRequired) {
 		console.log(`Found ${Object.keys(updatedPagesInNotionDatabase).length} new/updated pages/games in the Notion database. The Steam store API limits the allowed amount of requests in quick succession. Some games will be updated later.`);
 		hitSteamAPILimit = true;
-		updatedPagesInNotionDatabase = Object.fromEntries(Object.entries(updatedPagesInNotionDatabase).slice(0, 60));
+		updatedPagesInNotionDatabase = Object.fromEntries(Object.entries(updatedPagesInNotionDatabase).slice(0, 50));
 	}
 
 	if (Object.keys(updatedPagesInNotionDatabase).length > 0) {
