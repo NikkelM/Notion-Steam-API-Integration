@@ -38,6 +38,10 @@
 		"gamePrice": {
 			"enabled": true,
 			"notionProperty": "Price"
+		},
+		"steamDeckCompatibility": {
+			"enabled": true,
+			"notionProperty": "Steam Deck Compatibility"
 		}
 	}
 }

@@ -65,7 +65,7 @@ async function updateNotionDatabase() {
 		for (const [pageId, steamAppId] of Object.entries(updatedPagesInNotionDatabase)) {
 			try {
 				console.log(`Setting properties for game with Steam App ID ${steamAppId}`);
-				console.log(appInfoSteamUser[steamAppId].steam_deck_compatibility);
+
 				// Get info about this game from the Steam API, if required
 				const appInfoDirect = storeAPIRequired
 					? await getSteamAppInfoDirect(steamAppId)

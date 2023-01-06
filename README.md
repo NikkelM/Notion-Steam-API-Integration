@@ -144,7 +144,7 @@ Which game properties should be fetched when a new Steam game is detected, and t
 <details>
 <summary><code>gameName</code></summary>
 
-The name of the game as it appears on Steam.
+The name of the game as it appears on Steam. The database field in Notion must be of type "Text".
 
 | Type | Default value | Possible values | Required |
 |---|---|---|---|
@@ -209,7 +209,7 @@ The icon of the game as it appears in the game library. Will be set as the icon 
 <details>
 <summary><code>releaseDate</code></summary>
 
-The release date of the game.
+The release date of the game. The database field in Notion must be of type "Date".
 
 | Type | Default value | Possible values | Required |
 |---|---|---|---|
@@ -253,7 +253,7 @@ The format in which the release date should be set in the database. Can be eithe
 <details>
 <summary><code>reviewScore</code></summary>
 
-The user review score from 0-100.
+The user review score from 0-100. The database field in Notion must be of type "Number".
 
 | Type | Default value | Possible values | Required |
 |---|---|---|---|
@@ -288,7 +288,7 @@ The name of the Notion property to set the user review score in.
 <details>
 <summary><code>tags</code></summary>
 
-The user-defined tags of the game as they can be seen on the store page.
+The user-defined tags of the game as they can be seen on the store page. The database field in Notion must be of type "Multi-select".
 
 | Type | Default value | Possible values | Required |
 |---|---|---|---|
@@ -333,7 +333,7 @@ The language of the tags, e.g. "english" or "spanish".
 <details>
 <summary><code>gameDescription</code></summary>
 
-The short description of the game as it appears on the store page.
+The short description of the game as it appears on the store page. The database field in Notion must be of type "Text".
 
 | Type | Default value | Possible values | Required |
 |---|---|---|---|
@@ -368,7 +368,7 @@ The name of the Notion property to set the description in.
 <details>
 <summary><code>storePage</code></summary>
 
-The URL to the store page of the game.
+The URL to the store page of the game. The database field in Notion must be of type "URL".
 
 | Type | Default value | Possible values | Required |
 |---|---|---|---|
@@ -403,7 +403,7 @@ The name of the Notion property to set the store page URL in.
 <details>
 <summary><code>gamePrice</code></summary>
 
-The price of the game on Steam. Does not account for current sales or discounts (as this data would be outdated too quickly). The currency depends on your current country.
+The price of the game on Steam. Does not account for current sales or discounts (as this data would be outdated too quickly). The currency depends on your current country. The database field in Notion must be of type "Number".
 
 | Type | Default value | Possible values | Required |
 |---|---|---|---|
@@ -433,4 +433,39 @@ The name of the Notion property to set the price in.
 | Type | Default value | Possible values | Required |
 |---|---|---|---|
 | `string` | `"Price"` | A valid Notion property name | Yes |
+</details>
+
+<details>
+<summary><code>steamDeckCompatibility</code></summary>
+
+The Steam Deck Compatibility score, which can be one of "Verified", "Playable", "Unsupported" or "Unknown". The database field in Notion must be of type "Select".
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `object` | See item below | See sections below | No |
+
+```json
+"steamDeckCompatibility": {
+	"enabled": true,
+	"notionProperty": "Steam Deck Compatibility"
+}
+```
+
+<h3>Possible values</h3>
+
+<h4><code>enabled</code></h4>
+
+Whether or not the Steam Deck Compatibility score should be set in the database.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `boolean` | `true` | `true` or `false` | Yes |
+
+<h4><code>notionProperty</code></h4>
+
+The name of the Notion property to set the Steam Deck Compatibility score in.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `string` | `"Steam Deck Compatibility"` | A valid Notion property name | Yes |
 </details>

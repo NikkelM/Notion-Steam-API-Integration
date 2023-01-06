@@ -71,13 +71,17 @@
 				"gamePrice": {
 					"enabled": true,
 					"notionProperty": "Price"
+				},
+				"steamDeckCompatibility": {
+					"enabled": true,
+					"notionProperty": "Steam Deck Compatibility"
 				}
 			},
 			"additionalProperties": false,
 			"minProperties": 1,
 			"properties": {
 				"gameName": {
-					"description": "The name of the game as it appears on Steam.",
+					"description": "The name of the game as it appears on Steam. The database field in Notion must be of type \"Text\".",
 					"type": "object",
 					"default": {
 						"enabled": true,
@@ -118,7 +122,7 @@
 					"default": true
 				},
 				"releaseDate": {
-					"description": "The release date of the game.",
+					"description": "The release date of the game. The database field in Notion must be of type \"Date\".",
 					"type": "object",
 					"default": {
 						"enabled": true,
@@ -154,7 +158,7 @@
 					]
 				},
 				"reviewScore": {
-					"description": "The user review score from 0-100.",
+					"description": "The user review score from 0-100. The database field in Notion must be of type \"Number\".",
 					"type": "object",
 					"default": {
 						"enabled": true,
@@ -179,7 +183,7 @@
 					]
 				},
 				"tags": {
-					"description": "The user-defined tags of the game as they can be seen on the store page.",
+					"description": "The user-defined tags of the game as they can be seen on the store page. The database field in Notion must be of type \"Multi-select\".",
 					"type": "object",
 					"default": {
 						"enabled": true,
@@ -211,7 +215,7 @@
 					]
 				},
 				"gameDescription": {
-					"description": "The short description of the game as it appears on the store page.",
+					"description": "The short description of the game as it appears on the store page. The database field in Notion must be of type \"Text\".",
 					"type": "object",
 					"default": {
 						"enabled": true,
@@ -236,7 +240,7 @@
 					]
 				},
 				"storePage": {
-					"description": "The URL to the store page of the game.",
+					"description": "The URL to the store page of the game. The database field in Notion must be of type \"URL\".",
 					"type": "object",
 					"default": {
 						"enabled": true,
@@ -261,7 +265,7 @@
 					]
 				},
 				"gamePrice": {
-					"description": "The price of the game on Steam. Does not account for current sales or discounts (as this data would be outdated too quickly). The currency depends on your current country.",
+					"description": "The price of the game on Steam. Does not account for current sales or discounts (as this data would be outdated too quickly). The currency depends on your current country. The database field in Notion must be of type \"Number\".",
 					"type": "object",
 					"default": {
 						"enabled": true,
@@ -278,6 +282,31 @@
 							"description": "The name of the Notion property to set the price in.",
 							"type": "string",
 							"default": "Price"
+						}
+					},
+					"required": [
+						"enabled",
+						"notionProperty"
+					]
+				},
+				"steamDeckCompatibility": {
+					"description": "The Steam Deck Compatibility score, which can be one of \"Verified\", \"Playable\", \"Unsupported\" or \"Unknown\". The database field in Notion must be of type \"Select\".",
+					"type": "object",
+					"default": {
+						"enabled": true,
+						"notionProperty": "Steam Deck Compatibility"
+					},
+					"additionalProperties": false,
+					"properties": {
+						"enabled": {
+							"description": "Whether or not the Steam Deck compatibility should be set in the database.",
+							"type": "boolean",
+							"default": true
+						},
+						"notionProperty": {
+							"description": "The name of the Notion property to set the Steam Deck compatibility in.",
+							"type": "string",
+							"default": "Steam Deck Compatibility"
 						}
 					},
 					"required": [
