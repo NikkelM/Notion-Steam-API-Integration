@@ -113,6 +113,16 @@ If true, the integration will reset the local database, fetch all Steam App ID's
 </details>
 
 <details>
+<summary><code>alwaysUpdate</code></summary>
+
+If true, the integration will always update entries in the Notion database that were modified since it last ran, even if the game already exists in the local database. It will only update if another user than the integration has last modified the entry.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `boolean` | `false` | `true` or `false` | No |
+</details>
+
+<details>
 <summary><code>gameProperties</code></summary>
 
 Which game properties should be fetched when a new Steam game is detected, and the name of the corresponding field in the Notion database.
