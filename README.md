@@ -10,6 +10,8 @@ You can find the Steam App ID's for any number of games using just their names w
 
 Do you want to add games that are available on Game Pass to your Notion database? Use the [Game Pass API](https://github.com/NikkelM/Game-Pass-API) to get the data you need.
 
+If have data in the form of a complex JSON file, you can use the [JSON to Notion](https://github.com/NikkelM/JSON-to-Notion) tool to import all the required properties to your Notion database - this tool works great with the [Game Pass API](https://github.com/NikkelM/Game-Pass-API).
+
 ## Setup
 
 Run `npm install` to install the required dependencies first.
