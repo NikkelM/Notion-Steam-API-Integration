@@ -36,6 +36,11 @@
 			"type": "boolean",
 			"default": false
 		},
+		"alwaysUpdate": {
+			"description": "If true, the integration will always update entries in the Notion database that were modified since it last ran, even if the game already exists in the local database. It will only update if another user than the integration has last modified the entry.",
+			"type": "boolean",
+			"default": false
+		},
 		"gameProperties": {
 			"description": "Which game properties should be fetched when a new Steam game is detected, and the name of the corresponding field in the Notion database.",
 			"type": "object",
