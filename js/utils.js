@@ -50,7 +50,10 @@ async function loadLocalDatabase() {
 
 	// Reset the local database if the user wants to
 	if (CONFIG.forceReset) {
-		console.log("Resetting local database...");
+		// Set a timer of 15 seconds to give the user time to cancel the reset
+		console.log("Resetting local database in 10 seconds. Press Ctrl+C to cancel.");
+		await new Promise(resolve => setTimeout(resolve, 10000));
+		console.log("Resetting local database...\n");
 		await db.clear();
 	}
 

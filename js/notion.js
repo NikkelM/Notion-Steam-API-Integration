@@ -8,14 +8,18 @@ const databaseId = CONFIG.notionDatabaseId;
 
 // Get a list of games in the Notion database that have the `Steam App ID` field set and were last edited after our last check. 
 export async function getGamesFromNotionDatabase() {
-	const games = {}
+	const appIds = {};
+	const lastEditedBy = {};
 	const lastUpdatedAt = await localDatabase.get('lastUpdatedAt');
 
 	async function getPageOfGames(cursor) {
 		// While there are more pages left in the query, get pages from the database. 
 		const currentPages = await queryDatabase(cursor, lastUpdatedAt);
 
-		currentPages.results.forEach(page => games[page.id] = page.properties["Steam App ID"].number);
+		currentPages.results.forEach(page => {
+			appIds[page.id] = page.properties[CONFIG.steamAppIdProperty].number;
+			lastEditedBy[page.id] = page.last_edited_by.id;
+		});
 
 		if (currentPages.has_more) {
 			await getPageOfGames(currentPages.next_cursor)
@@ -23,7 +27,8 @@ export async function getGamesFromNotionDatabase() {
 	}
 
 	await getPageOfGames();
-	return games;
+
+	return [appIds, lastEditedBy];
 };
 
 // Fetch all pages from the database that have been edited since we last accessed the database, and that have a Steam App ID set
@@ -83,5 +88,15 @@ export async function checkNotionPropertiesExistence() {
 			console.error(`Error validating configuration file: Notion database does not contain the property "${property}" specified in the configuration file.`);
 			process.exit(1);
 		}
+	}
+}
+
+export async function setUserIdInDatabaseIfNotSet() {
+	try {
+		await localDatabase.get('userId');
+	} catch (error) {
+		// If the user ID is not set, set it
+		const response = await NOTION.users.me();
+		await localDatabase.put('userId', response.id);
 	}
 }
