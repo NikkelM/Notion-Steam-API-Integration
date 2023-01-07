@@ -59,7 +59,7 @@ export async function getGameProperties(appInfoDirect, appInfoSteamUser, steamAp
 		"properties": outputProperties,
 		"cover": cover,
 		"icon": icon
-	}
+	};
 }
 
 function getGameNameProperty(nameProperty, appInfoSteamUser, outputProperties) {
@@ -82,7 +82,7 @@ function getGameNameProperty(nameProperty, appInfoSteamUser, outputProperties) {
 				}
 			}
 		]
-	}
+	};
 
 	return outputProperties;
 }
@@ -102,7 +102,7 @@ function getGameCoverImage(imageProperty, appInfoDirect, appInfoSteamUser) {
 		"external": {
 			"url": coverUrl
 		}
-	}
+	};
 }
 
 function getGameIcon(iconProperty, appInfoSteamUser) {
@@ -119,7 +119,7 @@ function getGameIcon(iconProperty, appInfoSteamUser) {
 		"external": {
 			"url": iconUrl
 		}
-	}
+	};
 }
 
 function getGameReleaseDate(releaseDateProperty, appInfoSteamUser, outputProperties) {
@@ -146,7 +146,7 @@ function getGameReleaseDate(releaseDateProperty, appInfoSteamUser, outputPropert
 		"date": {
 			"start": releaseDate
 		}
-	}
+	};
 
 	return outputProperties;
 }
@@ -162,7 +162,7 @@ function getGameReviewScore(reviewScoreProperty, appInfoSteamUser, outputPropert
 
 	outputProperties[reviewScoreProperty.notionProperty] = {
 		"number": steamReviewScore
-	}
+	};
 
 	return outputProperties;
 }
@@ -182,7 +182,7 @@ async function getGameTags(tagsProperty, appInfoSteamUser, outputProperties) {
 				"name": tag
 			}
 		})
-	}
+	};
 
 	return outputProperties;
 }
@@ -203,7 +203,7 @@ function getGameDescription(gameDescriptionProperty, appInfoDirect, outputProper
 				}
 			}
 		]
-	}
+	};
 
 	return outputProperties;
 }
@@ -213,7 +213,7 @@ function getGameStorePage(storePageProperty, steamAppId, outputProperties) {
 
 	outputProperties[storePageProperty.notionProperty] = {
 		"url": `https://store.steampowered.com/app/${steamAppId}`
-	}
+	};
 
 	return outputProperties;
 }
@@ -227,25 +227,13 @@ function getGamePrice(priceProperty, appInfoDirect, outputProperties) {
 
 	outputProperties[priceProperty.notionProperty] = {
 		"number": price
-	}
+	};
 
 	return outputProperties;
 }
 
 function getSteamDeckCompatibility(steamDeckCompatibilityProperty, appInfoSteamUser, outputProperties) {
 	if (!steamDeckCompatibilityProperty.enabled) { return outputProperties; }
-
-	// if(!appInfoSteamUser.steam_deck_compatibility) { 
-	// 	outputProperties[steamDeckCompatibilityProperty.notionProperty] = {
-	// 		"options": [
-	// 			{
-	// 				"name": "Unknown"
-	// 			}
-	// 		]
-	// 	}
-
-	// 	return outputProperties; 
-	// }
 
 	let compatibility = "Unknown";
 	switch (appInfoSteamUser.steam_deck_compatibility?.category) {
@@ -266,7 +254,7 @@ function getSteamDeckCompatibility(steamDeckCompatibilityProperty, appInfoSteamU
 		"select": {
 			"name": compatibility
 		}
-	}
+	};
 
 	return outputProperties;
 }

@@ -12,7 +12,7 @@ import { getGameProperties } from './js/gameProperties.js';
 // ---------- Setup ----------
 
 // We need to do this here because of circular imports
-await checkNotionPropertiesExistence()
+await checkNotionPropertiesExistence();
 
 const updateInterval = CONFIG.updateInterval;
 
