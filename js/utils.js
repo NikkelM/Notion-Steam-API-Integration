@@ -61,6 +61,10 @@ async function loadLocalDatabase() {
 	try {
 		await db.get('lastUpdatedAt');
 	} catch (error) {
+		if(error.type === Error.ModuleError) {
+			console.error(`Error loading local database: ${error.message}. Perhaps another instance of the integration is already running?`);
+			process.exit(1);
+		}
 		await db.put('lastUpdatedAt', new Date(0).toISOString());
 		console.log("Successfully initialized local database.\n");
 	}
