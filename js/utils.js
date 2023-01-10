@@ -51,7 +51,7 @@ async function loadLocalDatabase() {
 	// Reset the local database if the user wants to
 	if (CONFIG.forceReset) {
 		// Set a timer of 10 seconds to give the user time to cancel the reset
-		console.log("Resetting local database in 10 seconds. Press Ctrl+C to cancel.");
+		console.log("Resetting local database in 10 seconds. Kill the process to cancel.");
 		await new Promise(resolve => setTimeout(resolve, 10000));
 		console.log("Resetting local database...\n");
 		await db.clear();
@@ -61,11 +61,12 @@ async function loadLocalDatabase() {
 	try {
 		await db.get('lastUpdatedAt');
 	} catch (error) {
-		if(error.type === Error.ModuleError) {
-			console.error(`Error loading local database: ${error.message}. Perhaps another instance of the integration is already running?`);
+		try {
+			await db.put('lastUpdatedAt', new Date(0).toISOString());
+		} catch (error) {
+			console.error(`Could not access database: ${error.message}. Perhaps another instance of the integration is already running?`);
 			process.exit(1);
 		}
-		await db.put('lastUpdatedAt', new Date(0).toISOString());
 		console.log("Successfully initialized local database.\n");
 	}
 
