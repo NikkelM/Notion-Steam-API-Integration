@@ -127,7 +127,7 @@
 					"type": "object",
 					"default": {
 						"enabled": true,
-						"default": "https://www.metal-hammer.de/wp-content/uploads/2022/11/22/19/steam-logo.jpg"
+						"default": "https://cdn.cloudflare.steamstatic.com/store/home/store_home_share.jpg"
 					},
 					"additionalProperties": false,
 					"properties": {
@@ -139,7 +139,9 @@
 						"default": {
 							"description": "The URL of the image to use if the game does not have a cover image.",
 							"type": "string",
-							"default": "https://www.metal-hammer.de/wp-content/uploads/2022/11/22/19/steam-logo.jpg"
+							"default": "https://cdn.cloudflare.steamstatic.com/store/home/store_home_share.jpg",
+							"format": "uri",
+							"pattern": "^https?://"
 						}
 					}
 				},
@@ -148,7 +150,7 @@
 					"type": "object",
 					"default": {
 						"enabled": true,
-						"default": "https://iconarchive.com/download/i75918/martz90/circle/steam.ico"
+						"default": "https://help.steampowered.com/public/shared/images/responsive/share_steam_logo.png"
 					},
 					"additionalProperties": false,
 					"properties": {
@@ -160,7 +162,9 @@
 						"default": {
 							"description": "The URL of the image to use if the game does not have an icon.",
 							"type": "string",
-							"default": "https://iconarchive.com/download/i75918/martz90/circle/steam.ico"
+							"default": "https://help.steampowered.com/public/shared/images/responsive/share_steam_logo.png",
+							"format": "uri",
+							"pattern": "^https?://"
 						}
 					}
 				},
