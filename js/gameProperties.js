@@ -1,24 +1,11 @@
 import { getSteamTagNames } from './steamAPI.js';
 import { CONFIG } from './utils.js';
 
-const DEFAULT_COVER_URL = "https://www.metal-hammer.de/wp-content/uploads/2022/11/22/19/steam-logo.jpg";
-const DEFAULT_ICON_URL = "https://iconarchive.com/download/i75918/martz90/circle/steam.ico";
-
 export async function getGameProperties(appInfoDirect, appInfoSteamUser, steamAppId) {
 	let outputProperties = {};
-	// Set the default cover and icon
-	let cover = {
-		"type": "external",
-		"external": {
-			"url": DEFAULT_COVER_URL
-		}
-	};
-	let icon = {
-		"type": "external",
-		"external": {
-			"url": DEFAULT_ICON_URL
-		}
-	};
+	let cover;
+	let icon;
+	let result = {};
 
 	for (const [propertyName, propertyValue] of Object.entries(CONFIG.gameProperties)) {
 		switch (propertyName) {
@@ -41,10 +28,12 @@ export async function getGameProperties(appInfoDirect, appInfoSteamUser, steamAp
 				outputProperties = getGameStorePage(propertyValue, steamAppId, outputProperties);
 				break;
 			case "coverImage":
-				cover = getGameCoverImage(propertyValue, appInfoDirect, appInfoSteamUser) ?? cover;
+				cover = getGameCoverImage(propertyValue, appInfoDirect, appInfoSteamUser);
+				if(cover) { result["cover"] = cover; }
 				break;
 			case "gameIcon":
-				icon = getGameIcon(propertyValue, appInfoSteamUser) ?? icon;
+				icon = getGameIcon(propertyValue, appInfoSteamUser);
+				if(cover) { result["icon"] = icon; }
 				break;
 			case "gamePrice":
 				outputProperties = getGamePrice(propertyValue, appInfoDirect, outputProperties);
@@ -55,19 +44,15 @@ export async function getGameProperties(appInfoDirect, appInfoSteamUser, steamAp
 		}
 	}
 
-	return {
-		"properties": outputProperties,
-		"cover": cover,
-		"icon": icon
-	};
+	result["properties"] = outputProperties;
+
+	return result;
 }
 
 function getGameNameProperty(nameProperty, appInfoSteamUser, outputProperties) {
-	if (!nameProperty.enabled) { return outputProperties; }
+	if (!nameProperty.enabled || !appInfoSteamUser.name) { return outputProperties; }
 
-	const gameTitle = appInfoSteamUser.name
-		? appInfoSteamUser.name
-		: null;
+	const gameTitle = appInfoSteamUser.name;
 
 	const propertyType = nameProperty.isPageTitle
 		? "title"
@@ -219,11 +204,9 @@ function getGameStorePage(storePageProperty, steamAppId, outputProperties) {
 }
 
 function getGamePrice(priceProperty, appInfoDirect, outputProperties) {
-	if (!priceProperty.enabled) { return outputProperties; }
+	if (!priceProperty.enabled || appInfoDirect.price_overview?.initial === undefined || appInfoDirect.price_overview?.initial === null) { return outputProperties; }
 
-	const price = appInfoDirect.price_overview
-		? appInfoDirect.price_overview.initial / 100
-		: null;
+	const price = appInfoDirect.price_overview.initial / 100;
 
 	outputProperties[priceProperty.notionProperty] = {
 		"number": price
