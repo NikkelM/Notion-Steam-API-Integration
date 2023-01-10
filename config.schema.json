@@ -143,7 +143,10 @@
 							"format": "uri",
 							"pattern": "^https?://"
 						}
-					}
+					},
+					"required": [
+						"enabled"
+					]
 				},
 				"gameIcon": {
 					"description": "The icon of the game as it appears in the game library. Will be set as the icon for the page if enabled.",
@@ -160,13 +163,16 @@
 							"default": true
 						},
 						"default": {
-							"description": "The URL of the image to use if the game does not have an icon.",
+							"description": "The URL of the image to use if the game does not have an icon through any of the two API's.",
 							"type": "string",
 							"default": "https://help.steampowered.com/public/shared/images/responsive/share_steam_logo.png",
 							"format": "uri",
 							"pattern": "^https?://"
 						}
-					}
+					},
+					"required": [
+						"enabled"
+					]
 				},
 				"releaseDate": {
 					"description": "The release date of the game. The database field in Notion must be of type \"Date\".",
