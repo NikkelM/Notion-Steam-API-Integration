@@ -50,8 +50,14 @@
 					"notionProperty": "Name",
 					"isPageTitle": true
 				},
-				"coverImage": true,
-				"gameIcon": true,
+				"coverImage": {
+					"enabled": true,
+					"default": "https://cdn.cloudflare.steamstatic.com/store/home/store_home_share.jpg"
+				},
+				"gameIcon": {
+					"enabled": true,
+					"default": "https://help.steampowered.com/public/shared/images/responsive/share_steam_logo.png"
+				},
 				"releaseDate": {
 					"enabled": true,
 					"notionProperty": "Release Date",
@@ -118,13 +124,45 @@
 				},
 				"coverImage": {
 					"description": "The cover image of the game as it appears on the shop page. Will be set as the cover image for the page if enabled.",
-					"type": "boolean",
-					"default": true
+					"type": "object",
+					"default": {
+						"enabled": true,
+						"default": "https://www.metal-hammer.de/wp-content/uploads/2022/11/22/19/steam-logo.jpg"
+					},
+					"additionalProperties": false,
+					"properties": {
+						"enabled": {
+							"description": "Whether or not the cover image of the game should be set in the database.",
+							"type": "boolean",
+							"default": true
+						},
+						"default": {
+							"description": "The URL of the image to use if the game does not have a cover image.",
+							"type": "string",
+							"default": "https://www.metal-hammer.de/wp-content/uploads/2022/11/22/19/steam-logo.jpg"
+						}
+					}
 				},
 				"gameIcon": {
 					"description": "The icon of the game as it appears in the game library. Will be set as the icon for the page if enabled.",
-					"type": "boolean",
-					"default": true
+					"type": "object",
+					"default": {
+						"enabled": true,
+						"default": "https://iconarchive.com/download/i75918/martz90/circle/steam.ico"
+					},
+					"additionalProperties": false,
+					"properties": {
+						"enabled": {
+							"description": "Whether or not the icon of the game should be set in the database.",
+							"type": "boolean",
+							"default": true
+						},
+						"default": {
+							"description": "The URL of the image to use if the game does not have an icon.",
+							"type": "string",
+							"default": "https://iconarchive.com/download/i75918/martz90/circle/steam.ico"
+						}
+					}
 				},
 				"releaseDate": {
 					"description": "The release date of the game. The database field in Notion must be of type \"Date\".",
