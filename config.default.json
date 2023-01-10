@@ -12,8 +12,14 @@
 			"notionProperty": "Name",
 			"isPageTitle": true
 		},
-		"coverImage": true,
-		"gameIcon": true,
+		"coverImage": {
+			"enabled": true,
+			"default": "https://cdn.cloudflare.steamstatic.com/store/home/store_home_share.jpg" 
+		},
+		"gameIcon": {
+			"enabled": true,
+			"default": "https://help.steampowered.com/public/shared/images/responsive/share_steam_logo.png"
+		},
 		"releaseDate": {
 			"enabled": true,
 			"notionProperty": "Release Date",
