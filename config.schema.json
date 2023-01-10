@@ -137,7 +137,7 @@
 							"default": true
 						},
 						"default": {
-							"description": "The URL of the image to use if the game does not have a cover image.",
+							"description": "The URL of the image to use if the game does not have a cover image through any of the two API's.",
 							"type": "string",
 							"default": "https://cdn.cloudflare.steamstatic.com/store/home/store_home_share.jpg",
 							"format": "uri",

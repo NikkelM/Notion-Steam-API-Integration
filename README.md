@@ -210,8 +210,32 @@ The cover image of the game as it appears on the shop page. Will be set as the c
 
 | Type | Default value | Possible values | Required |
 |---|---|---|---|
-| `boolean` | `true` | `true` or `false` | No |
+| `object` | See item below | See sections below | No |
 
+```json
+"coverImage": {
+	"enabled": true,
+	"default": "https://cdn.cloudflare.steamstatic.com/store/home/store_home_share.jpg"
+}
+```
+
+<h3>Possible values</h3>
+
+<h4><code>enabled</code></h4>
+
+Whether or not the cover image of the game should be set in the database.
+
+| Type | Default value | Possible values | Required |
+| --- | --- | --- | --- |
+| `boolean` | `true` | `true` or `false` | Yes |
+
+<h4><code>default</code></h4>
+
+The URL of the image to use if the game does not have a cover image through any of the two API's.
+
+| Type | Default value | Possible values | Required |
+| --- | --- | --- | --- |
+| `string` | `"https://cdn.cloudflare.steamstatic.com/store/home/store_home_share.jpg"` | A valid URL | Yes |
 </details>
 
 <details>
@@ -221,7 +245,32 @@ The icon of the game as it appears in the game library. Will be set as the icon 
 
 | Type | Default value | Possible values | Required |
 |---|---|---|---|
-| `boolean` | `true` | `true` or `false` | No |
+| `object` | See item below | See sections below | No |
+
+```json
+"gameIcon": {
+	"enabled": true,
+	"default": "https://help.steampowered.com/public/shared/images/responsive/share_steam_logo.png"
+}
+```
+
+<h3>Possible values</h3>
+
+<h4><code>enabled</code></h4>
+
+Whether or not the icon of the game should be set in the database.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `boolean` | `true` | `true` or `false` | Yes |
+
+<h4><code>default</code></h4>
+
+The URL of the image to use if the game does not have an icon through any of the two API's.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `string` | `"https://help.steampowered.com/public/shared/images/responsive/share_steam_logo.png"` | A valid URL | Yes |
 </details>
 
 <details>
