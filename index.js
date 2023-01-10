@@ -100,12 +100,11 @@ async function updateNotionDatabase() {
 				hadError = true;
 			}
 		}
-
-		// Only update the last updated time if there were no errors during execution and we didn't hit the Steam API request limit
-		// This makes sure that we can find the games that had errors or that we had to omit again the next time
-		if (!hadError && !hitSteamAPILimit) {
-			localDatabase.put('lastUpdatedAt', newLastUpdatedAt);
-		}
+	}
+	// Only update the last updated time if there were no errors during execution and we didn't hit the Steam API request limit
+	// This makes sure that we can find the games that had errors or that we had to omit again the next time
+	if (!hadError && !hitSteamAPILimit) {
+		localDatabase.put('lastUpdatedAt', newLastUpdatedAt);
 	}
 
 	if (hitSteamAPILimit) {
