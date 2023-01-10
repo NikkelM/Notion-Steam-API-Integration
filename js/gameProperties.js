@@ -1,24 +1,11 @@
 import { getSteamTagNames } from './steamAPI.js';
 import { CONFIG } from './utils.js';
 
-const DEFAULT_COVER_URL = "https://www.metal-hammer.de/wp-content/uploads/2022/11/22/19/steam-logo.jpg";
-const DEFAULT_ICON_URL = "https://iconarchive.com/download/i75918/martz90/circle/steam.ico";
-
 export async function getGameProperties(appInfoDirect, appInfoSteamUser, steamAppId) {
 	let outputProperties = {};
-	// Set the default cover and icon
-	let cover = {
-		"type": "external",
-		"external": {
-			"url": DEFAULT_COVER_URL
-		}
-	};
-	let icon = {
-		"type": "external",
-		"external": {
-			"url": DEFAULT_ICON_URL
-		}
-	};
+	let cover;
+	let icon;
+	let result = {};
 
 	for (const [propertyName, propertyValue] of Object.entries(CONFIG.gameProperties)) {
 		switch (propertyName) {
@@ -41,10 +28,12 @@ export async function getGameProperties(appInfoDirect, appInfoSteamUser, steamAp
 				outputProperties = getGameStorePage(propertyValue, steamAppId, outputProperties);
 				break;
 			case "coverImage":
-				cover = getGameCoverImage(propertyValue, appInfoDirect, appInfoSteamUser) ?? cover;
+				cover = getGameCoverImage(propertyValue, appInfoDirect, appInfoSteamUser);
+				if (cover) { result["cover"] = cover; }
 				break;
 			case "gameIcon":
-				icon = getGameIcon(propertyValue, appInfoSteamUser) ?? icon;
+				icon = getGameIcon(propertyValue, appInfoSteamUser);
+				if (cover) { result["icon"] = icon; }
 				break;
 			case "gamePrice":
 				outputProperties = getGamePrice(propertyValue, appInfoDirect, outputProperties);
@@ -55,19 +44,16 @@ export async function getGameProperties(appInfoDirect, appInfoSteamUser, steamAp
 		}
 	}
 
-	return {
-		"properties": outputProperties,
-		"cover": cover,
-		"icon": icon
-	};
+	result["properties"] = outputProperties;
+
+	return result;
 }
 
 function getGameNameProperty(nameProperty, appInfoSteamUser, outputProperties) {
-	if (!nameProperty.enabled) { return outputProperties; }
+	if (!nameProperty.enabled || !appInfoSteamUser.name) { return outputProperties; }
 
-	const gameTitle = appInfoSteamUser.name
-		? appInfoSteamUser.name
-		: null;
+	// We use the title from the Steam User API as this stops us from always having to ping the Steam store API, as most users will want to get the game name
+	const gameTitle = appInfoSteamUser.name;
 
 	const propertyType = nameProperty.isPageTitle
 		? "title"
@@ -88,14 +74,11 @@ function getGameNameProperty(nameProperty, appInfoSteamUser, outputProperties) {
 }
 
 function getGameCoverImage(imageProperty, appInfoDirect, appInfoSteamUser) {
-	if (!imageProperty) { return null; }
+	if (!imageProperty || (!appInfoDirect.header_image && !appInfoSteamUser.header_image?.english)) { return null; }
 
-	// Get the URL for the cover image. Default value has a Steam theme
-	const coverUrl = appInfoDirect.header_image
-		? appInfoDirect.header_image
-		: (appInfoSteamUser.header_image?.english
-			? `https://cdn.cloudflare.steamstatic.com/steam/apps/${appInfoSteamUser.gameid}/${appInfoSteamUser.header_image.english}`
-			: DEFAULT_COVER_URL);
+	// Use the URL from the Steam store API if available, otherwise use the SteamUser API
+	// One of the two must exist, following the if above
+	const coverUrl = appInfoDirect.header_image ?? `https://cdn.cloudflare.steamstatic.com/steam/apps/${appInfoSteamUser.gameid}/${appInfoSteamUser.header_image.english}`;
 
 	return {
 		"type": "external",
@@ -106,13 +89,10 @@ function getGameCoverImage(imageProperty, appInfoDirect, appInfoSteamUser) {
 }
 
 function getGameIcon(iconProperty, appInfoSteamUser) {
-	if (!iconProperty) { return null; }
+	if (!iconProperty || !appInfoSteamUser.icon) { return null; }
 
-	// Get the URL for the game icon. Default value has a Steam theme
 	// Game icon URL is not available through the Steam store API, so we have to use the SteamUser API
-	const iconUrl = appInfoSteamUser.icon
-		? `https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/${appInfoSteamUser.gameid}/${appInfoSteamUser.icon}.jpg`
-		: DEFAULT_ICON_URL;
+	const iconUrl = `https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/${appInfoSteamUser.gameid}/${appInfoSteamUser.icon}.jpg`;
 
 	return {
 		"type": "external",
@@ -125,7 +105,7 @@ function getGameIcon(iconProperty, appInfoSteamUser) {
 function getGameReleaseDate(releaseDateProperty, appInfoSteamUser, outputProperties) {
 	if (!releaseDateProperty.enabled) { return outputProperties; }
 
-	// Get the release date. If no release date is available, use the Unix epoch
+	// If no release date is available, don't set it at all in the database
 	// The releaseDate format from the Steam API is not in ISO format, so we use the SteamUser API instead
 	let releaseDate;
 	if (appInfoSteamUser.original_release_date) {
@@ -135,7 +115,7 @@ function getGameReleaseDate(releaseDateProperty, appInfoSteamUser, outputPropert
 	} else if (appInfoSteamUser.store_asset_mtime) {
 		releaseDate = new Date(parseInt(appInfoSteamUser.store_asset_mtime) * 1000).toISOString();
 	} else {
-		releaseDate = new Date(0);
+		return outputProperties;
 	}
 
 	if (releaseDate && releaseDateProperty.format == "date") {
@@ -152,13 +132,10 @@ function getGameReleaseDate(releaseDateProperty, appInfoSteamUser, outputPropert
 }
 
 function getGameReviewScore(reviewScoreProperty, appInfoSteamUser, outputProperties) {
-	if (!reviewScoreProperty.enabled) { return outputProperties; }
+	if (!reviewScoreProperty.enabled || !appInfoSteamUser.review_percentage) { return outputProperties; }
 
-	// Get the Steam user review score as a percentage
 	// The reviewScore is not available through the Steam store API, so we have to use the SteamUser API instead
-	const steamReviewScore = appInfoSteamUser.review_percentage
-		? parseInt(appInfoSteamUser.review_percentage) / 100
-		: null;
+	const steamReviewScore = parseInt(appInfoSteamUser.review_percentage) / 100;
 
 	outputProperties[reviewScoreProperty.notionProperty] = {
 		"number": steamReviewScore
@@ -170,11 +147,12 @@ function getGameReviewScore(reviewScoreProperty, appInfoSteamUser, outputPropert
 async function getGameTags(tagsProperty, appInfoSteamUser, outputProperties) {
 	if (!tagsProperty.enabled) { return outputProperties; }
 
-	// Parse the tags from the Steam API. If no tags are found, set a "No tags found" placeholder
 	// The tags are not available through the Steam store API, so we have to use the SteamUser API instead
 	const tags = appInfoSteamUser.store_tags
 		? await getSteamTagNames(appInfoSteamUser.store_tags, tagsProperty.tagLanguage).then((tags) => { return tags; })
-		: ["No tags found"];
+		: null;
+
+	if (tags === null) { return outputProperties; }
 
 	outputProperties[tagsProperty.notionProperty] = {
 		"multi_select": tags.map((tag) => {
@@ -188,12 +166,11 @@ async function getGameTags(tagsProperty, appInfoSteamUser, outputProperties) {
 }
 
 function getGameDescription(gameDescriptionProperty, appInfoDirect, outputProperties) {
-	if (!gameDescriptionProperty.enabled) { return outputProperties; }
+	// Set no description if the value doesn't exist in the Steam store API response, or it is an empty string
+	if (!gameDescriptionProperty.enabled || !appInfoDirect.short_description) { return outputProperties; }
 
-	// Get the game description. If no description is available, set a null
-	const gameDescription = appInfoDirect.short_description
-		? appInfoDirect.short_description
-		: "";
+	// Notion limits text fields to 2000 characters
+	const gameDescription = appInfoDirect.short_description.substring(0, 2000);
 
 	outputProperties[gameDescriptionProperty.notionProperty] = {
 		"rich_text": [
@@ -219,11 +196,9 @@ function getGameStorePage(storePageProperty, steamAppId, outputProperties) {
 }
 
 function getGamePrice(priceProperty, appInfoDirect, outputProperties) {
-	if (!priceProperty.enabled) { return outputProperties; }
+	if (!priceProperty.enabled || appInfoDirect.price_overview?.initial === undefined || appInfoDirect.price_overview?.initial === null) { return outputProperties; }
 
-	const price = appInfoDirect.price_overview
-		? appInfoDirect.price_overview.initial / 100
-		: null;
+	const price = appInfoDirect.price_overview.initial / 100;
 
 	outputProperties[priceProperty.notionProperty] = {
 		"number": price
