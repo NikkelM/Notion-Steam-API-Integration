@@ -80,7 +80,7 @@ export async function addGameToLocalDatabase(pageId, steamAppId) {
 
 function isStoreAPIRequired() {
 	return (
-		CONFIG.gameProperties.coverImage ||
+		CONFIG.gameProperties.coverImage?.enabled ||
 		CONFIG.gameProperties.gameDescription?.enabled ||
 		CONFIG.gameProperties.gamePrice?.enabled
 	)
@@ -92,7 +92,8 @@ function isSteamUserAPIRequired() {
 		CONFIG.gameProperties.releaseDate?.enabled ||
 		CONFIG.gameProperties.reviewScore?.enabled ||
 		CONFIG.gameProperties.tags?.enabled ||
-		CONFIG.gameProperties.gameIcon ||
+		CONFIG.gameProperties.gameIcon?.enabled ||
+		CONFIG.gameProperties.coverImage?.enabled ||
 		CONFIG.gameProperties.steamDeckCompatibility?.enabled
 	);
 }

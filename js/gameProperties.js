@@ -73,12 +73,16 @@ function getGameNameProperty(nameProperty, appInfoSteamUser, outputProperties) {
 	return outputProperties;
 }
 
-function getGameCoverImage(imageProperty, appInfoDirect, appInfoSteamUser) {
-	if (!imageProperty || (!appInfoDirect.header_image && !appInfoSteamUser.header_image?.english)) { return null; }
+function getGameCoverImage(coverProperty, appInfoDirect, appInfoSteamUser) {
+	// Don't set a cover image if it is disabled, or if there is no cover image available
+	if (!coverProperty.enabled || (!appInfoDirect.header_image && !appInfoSteamUser.header_image?.english && !coverProperty.default)) { return null; }
 
-	// Use the URL from the Steam store API if available, otherwise use the SteamUser API
-	// One of the two must exist, following the if above
-	const coverUrl = appInfoDirect.header_image ?? `https://cdn.cloudflare.steamstatic.com/steam/apps/${appInfoSteamUser.gameid}/${appInfoSteamUser.header_image.english}`;
+	// Use the URL from the Steam store API if available, else use the SteamUser API if available, else use the default image
+	const coverUrl = appInfoDirect.header_image
+		? appInfoDirect.header_image
+		: (appInfoSteamUser.header_image?.english
+			? `https://cdn.cloudflare.steamstatic.com/steam/apps/${appInfoSteamUser.gameid}/${appInfoSteamUser.header_image.english}`
+			: coverProperty.default);
 
 	return {
 		"type": "external",
@@ -89,10 +93,12 @@ function getGameCoverImage(imageProperty, appInfoDirect, appInfoSteamUser) {
 }
 
 function getGameIcon(iconProperty, appInfoSteamUser) {
-	if (!iconProperty || !appInfoSteamUser.icon) { return null; }
+	if (!iconProperty.enabled || (!appInfoSteamUser.icon && !iconProperty.default)) { return null; }
 
 	// Game icon URL is not available through the Steam store API, so we have to use the SteamUser API
-	const iconUrl = `https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/${appInfoSteamUser.gameid}/${appInfoSteamUser.icon}.jpg`;
+	const iconUrl = appInfoSteamUser.icon
+		? `https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/${appInfoSteamUser.gameid}/${appInfoSteamUser.icon}.jpg`
+		: iconProperty.default;
 
 	return {
 		"type": "external",
