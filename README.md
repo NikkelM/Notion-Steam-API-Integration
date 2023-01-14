@@ -4,14 +4,6 @@
 
 Notion integration for automatically updating database entries containing a `Steam App ID` with data from the Steam API.
 
-## Related projects
-
-You can find the Steam App ID's for any number of games using just their names with the [Steam App ID Finder](https://github.com/NikkelM/Steam-App-ID-Finder). Useful for games you own on other platforms, such as the Epic Games Launcher or GOG.
-
-Do you want to add games that are available on Game Pass to your Notion database? Use the [Game Pass API](https://github.com/NikkelM/Game-Pass-API) to get the data you need.
-
-If have data in the form of a complex JSON file, you can use the [JSON to Notion](https://github.com/NikkelM/JSON-to-Notion) tool to import all the required properties to your Notion database - this tool works great with the [Game Pass API](https://github.com/NikkelM/Game-Pass-API).
-
 ## Setup
 
 Run `npm install` to install the required dependencies first.
@@ -536,3 +528,15 @@ The name of the Notion property to set the Steam Deck Compatibility score in.
 |---|---|---|---|
 | `string` | `"Steam Deck Compatibility"` | A valid Notion property name | Yes |
 </details>
+
+## Related projects
+
+You can find the Steam App ID's for any number of games using just their names with the [Steam App ID Finder](https://github.com/NikkelM/Steam-App-ID-Finder). Useful for games you own on other platforms, such as the Epic Games Launcher or GOG.
+
+Do you want to add games that are available on Game Pass to your Notion database? Use the [Game Pass API](https://github.com/NikkelM/Game-Pass-API) to get the data you need.
+
+If have data in the form of a complex JSON file, you can use the [JSON to Notion](https://github.com/NikkelM/JSON-to-Notion) tool to import all the required properties to your Notion database - this tool works great with the [Game Pass API](https://github.com/NikkelM/Game-Pass-API).
+
+## Feedback
+
+If you have any question, feedback or feature requests, feel free to open an [issue](https://github.com/NikkelM/Notion-Steam-API-Integration/issues/new).
