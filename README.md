@@ -531,7 +531,7 @@ The name of the Notion property to set the Steam Deck Compatibility score in.
 
 ## Related projects
 
-You can find the Steam App ID's for any number of games using just their names with the [Steam App ID Finder](https://github.com/NikkelM/Steam-App-ID-Finder). Useful for games you own on other platforms, such as the Epic Games Launcher or GOG.
+You can get a list of all games you own on Steam, Epic Games or GOG using the [Steam App ID Finder](https://github.com/NikkelM/Steam-App-ID-Finder). This project also includes a utility to get the Steam App IDs from just a list of game names.
 
 Do you want to add games that are available on Game Pass to your Notion database? Use the [Game Pass API](https://github.com/NikkelM/Game-Pass-API) to get the data you need.
 
