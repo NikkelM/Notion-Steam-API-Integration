@@ -60,8 +60,7 @@
 				},
 				"releaseDate": {
 					"enabled": true,
-					"notionProperty": "Release Date",
-					"format": "date"
+					"notionProperty": "Release Date"
 				},
 				"reviewScore": {
 					"enabled": true,
@@ -179,8 +178,7 @@
 					"type": "object",
 					"default": {
 						"enabled": true,
-						"notionProperty": "Release Date",
-						"format": "date"
+						"notionProperty": "Release Date"
 					},
 					"additionalProperties": false,
 					"properties": {
@@ -193,21 +191,11 @@
 							"description": "The name of the Notion property to set the release date in.",
 							"type": "string",
 							"default": "Release Date"
-						},
-						"format": {
-							"description": "The format in which the release date should be set in the database. Can be either \"date\" or \"datetime\".",
-							"type": "string",
-							"default": "date",
-							"enum": [
-								"date",
-								"datetime"
-							]
 						}
 					},
 					"required": [
 						"enabled",
-						"notionProperty",
-						"format"
+						"notionProperty"
 					]
 				},
 				"reviewScore": {

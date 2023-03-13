@@ -22,8 +22,7 @@
 		},
 		"releaseDate": {
 			"enabled": true,
-			"notionProperty": "Release Date",
-			"format": "date"
+			"notionProperty": "Release Date"
 		},
 		"reviewScore": {
 			"enabled": true,

@@ -133,9 +133,8 @@ function getGameReleaseDate(releaseDateProperty, appInfoDirect, outputProperties
 		return outputProperties;
 	}
 
-	if (releaseDate && releaseDateProperty.format == "date") {
-		releaseDate = releaseDate.split("T")[0];
-	}
+	// We only want the date, not the time, as the store API doesn't provide the time
+	releaseDate = releaseDate.split("T")[0];
 
 	outputProperties[releaseDateProperty.notionProperty] = {
 		"date": {
