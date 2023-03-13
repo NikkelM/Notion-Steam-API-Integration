@@ -117,21 +117,23 @@ function getGameReleaseDate(releaseDateProperty, appInfoDirect, outputProperties
 		// We need to distinguish three cases: Only the year is given ('2023'), year and month ('March 2023'), or year, month and day ('13 Mar, 2023')
 		// In cases where data is missing, we add the last day of the year or the first day of the month (as the last day of the month differs between months)
 		// We always add 00:00 UTC as the time, as the date is always given in UTC and we don't want to convert it to the local timezone
-		// We wrap this in a try-catch block as developers can set things other than dates, such as 'To be announced', which will raise an error during conversion
 		try {
-			const dateSpecificity = appInfoDirect.release_date.date.split(" ").length;
-			if (dateSpecificity == 1) {
-				releaseDate = new Date(appInfoDirect.release_date.date + '-12-31 00:00 UTC').toISOString();
-			} else if (dateSpecificity == 2) {
-				releaseDate = new Date(appInfoDirect.release_date.date + '-01 00:00 UTC').toISOString();
-			} else if (dateSpecificity == 3) {
-				releaseDate = new Date(appInfoDirect.release_date.date + ' 00:00 UTC').toISOString();
-			} else {
-				console.warn('!!!The release date format received from the Steam store API is unknown to the integration.\n!!!Please report this to the developer and include the following output:');
-				console.log(appInfoDirect);
-				return outputProperties;
-			}
+			// We wrap this in a try-catch block as developers can set things other than dates, such as 'To be announced', which will raise an error during conversion
+			const parsedDate = new Date(appInfoDirect.release_date.date).toISOString();
 		} catch (error) {
+			return outputProperties;
+		}
+
+		const dateSpecificity = appInfoDirect.release_date.date.split(" ").length;
+		if (dateSpecificity == 1) {
+			releaseDate = new Date(appInfoDirect.release_date.date + '-12-31 00:00 UTC').toISOString();
+		} else if (dateSpecificity == 2) {
+			releaseDate = new Date(appInfoDirect.release_date.date + '-01 00:00 UTC').toISOString();
+		} else if (dateSpecificity == 3) {
+			releaseDate = new Date(appInfoDirect.release_date.date + ' 00:00 UTC').toISOString();
+		} else {
+			console.warn('!!!The release date format received from the Steam store API is unknown to the integration.\n!!!Please report this to the developer and include the following output:');
+			console.log(appInfoDirect);
 			return outputProperties;
 		}
 	} else {
