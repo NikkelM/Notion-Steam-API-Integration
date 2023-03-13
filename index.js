@@ -6,7 +6,7 @@ process.removeAllListeners('warning');
 
 import { getSteamAppInfoDirect, getSteamAppInfoSteamUser } from './js/steamAPI.js';
 import { CONFIG, localDatabase, addGameToLocalDatabase, storeAPIRequired, steamUserAPIRequired } from './js/utils.js';
-import { getGamesFromNotionDatabase, updateNotionPage, checkNotionPropertiesExistence, setUserIdInDatabaseIfNotSet } from './js/notion.js';
+import { getGamesFromNotionDatabase, updateNotionPage, updateNotionBlock, checkNotionPropertiesExistence, setUserIdInDatabaseIfNotSet } from './js/notion.js';
 import { getGameProperties } from './js/gameProperties.js';
 
 // ---------- Setup ----------
@@ -92,7 +92,27 @@ async function updateNotionDatabase() {
 
 				let notionProperties = await getGameProperties(appInfoDirect, appInfoSteamUser[steamAppId], steamAppId);
 
-				updateNotionPage(pageId, notionProperties);
+				// This is a WIP currently not continued as the Notion API supports setting date mentions, but not converting them to a reminder
+				let blockContent = [];
+				if (CONFIG.gameProperties.releaseDate?.enabled && CONFIG.gameProperties.releaseDate?.setReminders) {
+					blockContent.push({
+						"type": "paragraph",
+						"paragraph": {
+							"rich_text": [{
+								"type": "mention",
+								"mention": {
+									"type": "date",
+									"date": {
+										"start": "2023-03-13T15:32:00.000Z",
+									}
+								}
+							}]
+						}
+					})
+				}
+
+				await updateNotionPage(pageId, notionProperties);
+				updateNotionBlock(pageId, blockContent)
 				addGameToLocalDatabase(pageId, steamAppId);
 
 			} catch (error) {
@@ -101,7 +121,7 @@ async function updateNotionDatabase() {
 			}
 		}
 	}
-	
+
 	// Only update the last updated time if there were no errors during execution and we didn't hit the Steam API request limit
 	// This makes sure that we can find the games that had errors or that we had to omit again the next time
 	if (!hadError && !hitSteamAPILimit) {

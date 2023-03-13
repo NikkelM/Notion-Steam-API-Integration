@@ -60,7 +60,8 @@
 				},
 				"releaseDate": {
 					"enabled": true,
-					"notionProperty": "Release Date"
+					"notionProperty": "Release Date",
+					"setReminders": true
 				},
 				"reviewScore": {
 					"enabled": true,
@@ -178,7 +179,8 @@
 					"type": "object",
 					"default": {
 						"enabled": true,
-						"notionProperty": "Release Date"
+						"notionProperty": "Release Date",
+						"setReminders": true
 					},
 					"additionalProperties": false,
 					"properties": {
@@ -191,6 +193,11 @@
 							"description": "The name of the Notion property to set the release date in.",
 							"type": "string",
 							"default": "Release Date"
+						},
+						"setReminders": {
+							"description": "Whether or not to set reminders for future release dates.",
+							"type": "boolean",
+							"default": true
 						}
 					},
 					"required": [

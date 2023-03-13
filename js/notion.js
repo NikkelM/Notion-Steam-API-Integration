@@ -56,13 +56,22 @@ async function queryDatabase(cursor, lastUpdatedAt) {
 	});
 }
 
-export function updateNotionPage(pageId, properties) {
+export async function updateNotionPage(pageId, properties) {
 	// Update the game's page in the database with the new info
-	NOTION.pages.update({
+	await NOTION.pages.update({
 		page_id: pageId,
 		properties: properties.properties,
 		cover: properties.cover,
 		icon: properties.icon
+	});
+}
+
+export async function updateNotionBlock(blockId, children) {
+	// Update the game's page in the database with the new info
+	await NOTION.blocks.children.append({
+		block_id: blockId,
+		// children is a lost of blocks
+		children: children
 	});
 }
 
