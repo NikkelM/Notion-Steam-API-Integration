@@ -1,7 +1,7 @@
 {
 	"name": "notion-steam-api-integration",
 	"type": "module",
-	"version": "1.5.0",
+	"version": "1.5.1",
 	"description": "Notion integration to fetch data from the Steam API and populate a databse given Steam App ID's.",
 	"main": "index.js",
 	"dependencies": {
