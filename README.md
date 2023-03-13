@@ -134,8 +134,7 @@ Which game properties should be fetched when a new Steam game is detected, and t
 	"gameIcon": true,
 	"releaseDate": {
 		"enabled": true,
-		"notionProperty": "Release Date",
-		"format": "date"
+		"notionProperty": "Release Date"
 	},
 	"reviewScore": {
 		"enabled": true,
@@ -277,8 +276,7 @@ The release date of the game. The database field in Notion must be of type "Date
 ```json
 "releaseDate": {
 	"enabled": true,
-	"notionProperty": "Release Date",
-	"format": "date"
+	"notionProperty": "Release Date"
 }
 ```
 
@@ -299,14 +297,6 @@ The name of the Notion property to set the release date in.
 | Type | Default value | Possible values | Required |
 |---|---|---|---|
 | `string` | `"Release Date"` | A valid Notion property name | Yes |
-
-<h4><code>format</code></h4>
-
-The format in which the release date should be set in the database. Can be either "date" or "datetime".
-
-| Type | Default value | Possible values | Required |
-|---|---|---|---|
-| `string` | `"date"` | `"date"` or `"datetime"` | Yes |
 </details>
 
 <details>
