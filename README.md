@@ -138,6 +138,7 @@ Which game properties should be fetched when a new Steam game is detected, and t
 	},
 	"reviewScore": {
 		"enabled": true,
+		"format": "percentage",
 		"notionProperty": "Review Score"
 	},
 	"tags": {
@@ -153,7 +154,7 @@ Which game properties should be fetched when a new Steam game is detected, and t
 <details>
 <summary><code>gameName</code></summary>
 
-The name of the game as it appears on Steam. The database field in Notion must be of type "Text".
+The name of the game as it appears on Steam. The database field in Notion must be of type `Text`.
 
 | Type | Default value | Possible values | Required |
 |---|---|---|---|
@@ -267,7 +268,7 @@ The URL of the image to use if the game does not have an icon through any of the
 <details>
 <summary><code>releaseDate</code></summary>
 
-The release date of the game. The database field in Notion must be of type "Date".
+The release date of the game. The database field in Notion must be of type `Date`.
 
 | Type | Default value | Possible values | Required |
 |---|---|---|---|
@@ -302,7 +303,7 @@ The name of the Notion property to set the release date in.
 <details>
 <summary><code>reviewScore</code></summary>
 
-The user review score from 0-100. The database field in Notion must be of type "Number".
+The user review score for the game, formatted as one of a number of options. The database field in Notion must match the type defined by the chosen "format".
 
 | Type | Default value | Possible values | Required |
 |---|---|---|---|
@@ -311,6 +312,7 @@ The user review score from 0-100. The database field in Notion must be of type "
 ```json
 "reviewScore": {
 	"enabled": true,
+	"format": "percentage",
 	"notionProperty": "Review Score"
 }
 ```
@@ -325,6 +327,14 @@ Whether or not the user review score should be set in the database.
 |---|---|---|---|
 | `boolean` | `true` | `true` or `false` | Yes |
 
+<h4><code>format</code></h4>
+
+How the review score should be formatted.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `string` | `percentage` | `percentage`: Notion database field type: `Number`. A percentage value formatted as a float from 0.00-1.00.<br/>`sentiment`:Notion database field type: `Select`. A sentiment value such as "Overwhelmingly Positive" or "Mixed".<br/>`total`:Notion database field type: `Number`. The total number of reviews submitted for the game, across all languages.<br/>`positive`:Notion database field type: `Number`. The total number of positive reviews submitted for the game, across all languages.<br/>`negative`:Notion database field type: `Number`. The total number of negative reviews submitted for the game, across all languages.<br/>`positive/negative`:Notion database field type: `Text`. The total number of positive and negative reviews submitted for the game, across all languages, formatted as "{numPositive} positive / {numNegative} negative". | Yes |
+
 <h4><code>notionProperty</code></h4>
 
 The name of the Notion property to set the user review score in.
@@ -337,7 +347,7 @@ The name of the Notion property to set the user review score in.
 <details>
 <summary><code>tags</code></summary>
 
-The user-defined tags of the game as they can be seen on the store page. The database field in Notion must be of type "Multi-select".
+The user-defined tags of the game as they can be seen on the store page. The database field in Notion must be of type `Multi-select`.
 
 | Type | Default value | Possible values | Required |
 |---|---|---|---|
@@ -363,7 +373,7 @@ Whether or not the tags of the game should be set in the database.
 
 <h4><code>notionProperty</code></h4>
 
-The name of the Notion property to set the tags in. This field must be of type "multi-select".
+The name of the Notion property to set the tags in. This field must be of type `Multi-select`.
 
 | Type | Default value | Possible values | Required |
 |---|---|---|---|
@@ -382,7 +392,7 @@ The language of the tags, e.g. "english" or "spanish".
 <details>
 <summary><code>gameDescription</code></summary>
 
-The short description of the game as it appears on the store page. The database field in Notion must be of type "Text".
+The short description of the game as it appears on the store page. The database field in Notion must be of type `Text`.
 
 | Type | Default value | Possible values | Required |
 |---|---|---|---|
@@ -417,7 +427,7 @@ The name of the Notion property to set the description in.
 <details>
 <summary><code>storePage</code></summary>
 
-The URL to the store page of the game. The database field in Notion must be of type "URL".
+The URL to the store page of the game. The database field in Notion must be of type `URL`.
 
 | Type | Default value | Possible values | Required |
 |---|---|---|---|
@@ -452,7 +462,7 @@ The name of the Notion property to set the store page URL in.
 <details>
 <summary><code>gamePrice</code></summary>
 
-The price of the game on Steam. Does not account for current sales or discounts (as this data would be outdated too quickly). The currency depends on your current country. The database field in Notion must be of type "Number".
+The price of the game on Steam. Does not account for current sales or discounts (as this data would be outdated too quickly). The currency depends on your current country. The database field in Notion must be of type `Number`.
 
 | Type | Default value | Possible values | Required |
 |---|---|---|---|
@@ -487,7 +497,7 @@ The name of the Notion property to set the price in.
 <details>
 <summary><code>steamDeckCompatibility</code></summary>
 
-The Steam Deck Compatibility score, which can be one of "Verified", "Playable", "Unsupported" or "Unknown". The database field in Notion must be of type "Select".
+The Steam Deck Compatibility score, which can be one of "Verified", "Playable", "Unsupported" or "Unknown". The database field in Notion must be of type `Select`.
 
 | Type | Default value | Possible values | Required |
 |---|---|---|---|

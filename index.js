@@ -4,8 +4,8 @@
 // Suppresses the warning about the fetch API being unstable
 process.removeAllListeners('warning');
 
-import { getSteamAppInfoDirect, getSteamAppInfoSteamUser } from './js/steamAPI.js';
-import { CONFIG, localDatabase, addGameToLocalDatabase, storeAPIRequired, steamUserAPIRequired } from './js/utils.js';
+import { getSteamAppInfoDirect, getSteamAppInfoSteamUser, getSteamReviewScoreDirect } from './js/steamAPI.js';
+import { CONFIG, localDatabase, addGameToLocalDatabase, storeAPIRequired, steamUserAPIRequired, reviewAPIRequired } from './js/utils.js';
 import { getGamesFromNotionDatabase, updateNotionPage, checkNotionPropertiesExistence, setUserIdInDatabaseIfNotSet } from './js/notion.js';
 import { getGameProperties } from './js/gameProperties.js';
 
@@ -31,7 +31,7 @@ async function updateNotionDatabase() {
 
 	// Update the last updated timestamp
 	// Do this before fetching to make sure we don't miss changes made between now and fetching new properties below
-	// Subtract 60 more seconds to make sure we have some buffer in case things get changed inbetween executions
+	// Subtract 60 more seconds to make sure we have some buffer in case things get changed in between executions
 	const newLastUpdatedAt = new Date(Date.now() - 60000).toISOString();
 
 	// If we encounter an error or would hit the Steam API request limit, we don't want to update the timestamp to find the games we missed again
@@ -90,7 +90,12 @@ async function updateNotionDatabase() {
 					? await getSteamAppInfoDirect(steamAppId)
 					: null;
 
-				let notionProperties = await getGameProperties(appInfoDirect, appInfoSteamUser[steamAppId], steamAppId);
+				// Get info about the game's review score from the reviews API, if required
+				const appInfoReviews = reviewAPIRequired
+					? await getSteamReviewScoreDirect(steamAppId)
+					: null; 
+
+				let notionProperties = await getGameProperties(appInfoDirect, appInfoSteamUser[steamAppId], appInfoReviews, steamAppId);
 
 				updateNotionPage(pageId, notionProperties);
 				addGameToLocalDatabase(pageId, steamAppId);

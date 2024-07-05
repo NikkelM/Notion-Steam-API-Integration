@@ -8,6 +8,7 @@ export const CONFIG = getConfig();
 export const localDatabase = await loadLocalDatabase();
 export const storeAPIRequired = isStoreAPIRequired();
 export const steamUserAPIRequired = isSteamUserAPIRequired();
+export const reviewAPIRequired = isReviewAPIRequired();
 
 // ---------- Config ----------
 
@@ -51,7 +52,7 @@ async function loadLocalDatabase() {
 	// Reset the local database if the user wants to
 	if (CONFIG.forceReset) {
 		// Set a timer of 10 seconds to give the user time to cancel the reset
-		console.log("Resetting local database in 10 seconds. Kill the process to cancel.");
+		console.log("Resetting local database in 10 seconds. Kill the process to cancel (e.g. using Ctrl+C).");
 		await new Promise(resolve => setTimeout(resolve, 10000));
 		console.log("Resetting local database...\n");
 		await db.clear();
@@ -91,10 +92,15 @@ function isStoreAPIRequired() {
 function isSteamUserAPIRequired() {
 	return (
 		CONFIG.gameProperties.gameName?.enabled ||
-		CONFIG.gameProperties.reviewScore?.enabled ||
 		CONFIG.gameProperties.tags?.enabled ||
 		CONFIG.gameProperties.gameIcon?.enabled ||
 		CONFIG.gameProperties.coverImage?.enabled ||
 		CONFIG.gameProperties.steamDeckCompatibility?.enabled
+	);
+}
+
+function isReviewAPIRequired() {
+	return (
+		CONFIG.gameProperties.reviewScore?.enabled
 	);
 }

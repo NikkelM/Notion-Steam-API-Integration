@@ -26,6 +26,7 @@
 		},
 		"reviewScore": {
 			"enabled": true,
+			"format": "percentage",
 			"notionProperty": "Review Score"
 		},
 		"tags": {
