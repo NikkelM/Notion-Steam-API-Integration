@@ -17,8 +17,7 @@ export async function getSteamAppInfoDirect(appId, retryCount = 0) {
 				return data[appId].data;
 			}
 			return null;
-		}
-		);
+		});
 
 	// If the request failed, we try again
 	if (!result && retryCount < 3) {
@@ -50,6 +49,20 @@ export async function getSteamAppInfoSteamUser(appIds) {
 
 		resolve(result);
 	});
+}
+
+// Gets the current review score data for a game from the Steam reviews API
+export async function getSteamReviewScoreDirect(appId) {
+	const result = await fetch(`https://store.steampowered.com/appreviews/${appId}?json=1&language=all`)
+	.then(response => response.json())
+	.then(data => {
+		if (data?.success) {
+			return data.query_summary;
+		}
+		return null;
+	});
+
+	return result;
 }
 
 export async function getSteamTagNames(storeTags, tagLanguage) {

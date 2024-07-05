@@ -65,6 +65,7 @@
 				},
 				"reviewScore": {
 					"enabled": true,
+					"format": "percentage",
 					"notionProperty": "Review Score"
 				},
 				"tags": {
@@ -206,10 +207,11 @@
 					]
 				},
 				"reviewScore": {
-					"description": "The user review score from 0-100. The database field in Notion must be of type \"Number\".",
+					"description": "The user review score for the game, formatted as one of a number of options. The database field in Notion must match the type defined by the chosen \"format\".",
 					"type": "object",
 					"default": {
 						"enabled": true,
+						"format": "percentage",
 						"notionProperty": "Review Score"
 					},
 					"additionalProperties": false,
@@ -219,6 +221,37 @@
 							"type": "boolean",
 							"default": true
 						},
+						"format": {
+							"description": "How the review score should be formatted.",
+							"type": "string",
+							"default": "percentage",
+							"oneOf": [
+									{
+										"const": "percentage",
+										"title": "Notion database field type: \"Number\". A percentage value formatted as a float from 0.00-1.00."
+									},
+									{
+										"const": "sentiment",
+										"title": "Notion database field type: \"Select\". A sentiment value such as \"Overwhelmingly Positive\" or \"Mixed\"."
+									},
+									{
+										"const": "total",
+										"title": "Notion database field type: \"Number\". The total number of reviews submitted for the game, across all languages."
+									},
+									{
+										"const": "positive",
+										"title": "Notion database field type: \"Number\". The total number of positive reviews submitted for the game, across all languages."
+									},
+									{
+										"const": "negative",
+										"title": "Notion database field type: \"Number\". The total number of negative reviews submitted for the game, across all languages."
+									},
+									{
+										"const": "positive/negative",
+										"title": "Notion database field type: \"Text\". The total number of positive and negative reviews submitted for the game, across all languages, formatted as \"{numPositive} positive / {numNegative} negative\"."
+									}
+							]
+						},
 						"notionProperty": {
 							"description": "The name of the Notion property to set the user review score in.",
 							"type": "string",
@@ -227,6 +260,7 @@
 					},
 					"required": [
 						"enabled",
+						"format",
 						"notionProperty"
 					]
 				},
