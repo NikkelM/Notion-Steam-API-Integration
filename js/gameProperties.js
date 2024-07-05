@@ -1,7 +1,7 @@
 import { getSteamTagNames } from './steamAPI.js';
 import { CONFIG } from './utils.js';
 
-export async function getGameProperties(appInfoDirect, appInfoSteamUser, steamAppId) {
+export async function getGameProperties(appInfoDirect, appInfoSteamUser, appInfoReviews, steamAppId) {
 	let outputProperties = {};
 	let cover;
 	let icon;
@@ -16,7 +16,7 @@ export async function getGameProperties(appInfoDirect, appInfoSteamUser, steamAp
 				outputProperties = getGameReleaseDate(propertyValue, appInfoDirect, outputProperties);
 				break;
 			case "reviewScore":
-				outputProperties = getGameReviewScore(propertyValue, appInfoSteamUser, outputProperties);
+				outputProperties = getGameReviewScore(propertyValue, appInfoReviews, outputProperties);
 				break;
 			case "tags":
 				outputProperties = await getGameTags(propertyValue, appInfoSteamUser, outputProperties);
@@ -152,15 +152,52 @@ function getGameReleaseDate(releaseDateProperty, appInfoDirect, outputProperties
 	return outputProperties;
 }
 
-function getGameReviewScore(reviewScoreProperty, appInfoSteamUser, outputProperties) {
-	if (!reviewScoreProperty.enabled || !appInfoSteamUser.review_percentage) { return outputProperties; }
+function getGameReviewScore(reviewScoreProperty, appInfoReviews, outputProperties) {
+	if (!reviewScoreProperty.enabled || !appInfoReviews) { return outputProperties; }
+	let notionReviewObject;
 
-	// The reviewScore is not available through the Steam store API, so we have to use the SteamUser API instead
-	const steamReviewScore = parseInt(appInfoSteamUser.review_percentage) / 100;
+	switch (reviewScoreProperty.format) {
+		case "percentage":
+			notionReviewObject = {
+				"number": parseFloat((appInfoReviews.total_positive / appInfoReviews.total_reviews).toFixed(2))
+			};
+			break;
+		case "sentiment":
+			notionReviewObject = {
+				"select": {
+					"name": appInfoReviews.review_score_desc
+				}
+			};
+			break;
+		case "total":
+			notionReviewObject = {
+				"number": appInfoReviews.total_reviews
+			};
+			break;
+		case "positive":
+			notionReviewObject = {
+				"number": appInfoReviews.total_positive
+			};
+			break;
+		case "negative":
+			notionReviewObject = {
+				"number": appInfoReviews.total_negative
+			};
+			break;
+		case "positive/negative":
+			notionReviewObject = {
+				"rich_text": [
+					{
+						"text": {
+							"content": `${appInfoReviews.total_positive} positive / ${appInfoReviews.total_negative} negative`
+						}
+					}
+				]
+			};
+			break;
+	}
 
-	outputProperties[reviewScoreProperty.notionProperty] = {
-		"number": steamReviewScore
-	};
+	outputProperties[reviewScoreProperty.notionProperty] = notionReviewObject;
 
 	return outputProperties;
 }
