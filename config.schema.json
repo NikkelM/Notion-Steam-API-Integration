@@ -86,6 +86,14 @@
 				"steamDeckCompatibility": {
 					"enabled": true,
 					"notionProperty": "Steam Deck Compatibility"
+				},
+				"gameDevelopers": {
+					"enabled": true,
+					"notionProperty": "Developers"
+				},
+				"gamePublishers": {
+					"enabled": true,
+					"notionProperty": "Publishers"
 				}
 			},
 			"additionalProperties": false,
@@ -382,6 +390,56 @@
 							"description": "The name of the Notion property to set the Steam Deck compatibility in.",
 							"type": "string",
 							"default": "Steam Deck Compatibility"
+						}
+					},
+					"required": [
+						"enabled",
+						"notionProperty"
+					]
+				},
+				"gameDevelopers": {
+					"description": "The developer(s) of the game. The database field in Notion must be of type \"Multi-select\".",
+					"type": "object",
+					"default": {
+						"enabled": true,
+						"notionProperty": "Developers"
+					},
+					"additionalProperties": false,
+					"properties": {
+						"enabled": {
+							"description": "Whether or not the developer(s) of the game should be set in the database.",
+							"type": "boolean",
+							"default": true
+						},
+						"notionProperty": {
+							"description": "The name of the Notion property to set the developer(s) in.",
+							"type": "string",
+							"default": "Developers"
+						}
+					},
+					"required": [
+						"enabled",
+						"notionProperty"
+					]
+				},
+				"gamePublishers": {
+					"description": "The publisher(s) of the game. The database field in Notion must be of type \"Multi-select\".",
+					"type": "object",
+					"default": {
+						"enabled": true,
+						"notionProperty": "Publishers"
+					},
+					"additionalProperties": false,
+					"properties": {
+						"enabled": {
+							"description": "Whether or not the publisher(s) of the game should be set in the database.",
+							"type": "boolean",
+							"default": true
+						},
+						"notionProperty": {
+							"description": "The name of the Notion property to set the publisher(s) in.",
+							"type": "string",
+							"default": "Publishers"
 						}
 					},
 					"required": [

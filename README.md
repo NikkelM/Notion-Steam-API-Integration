@@ -529,6 +529,76 @@ The name of the Notion property to set the Steam Deck Compatibility score in.
 | `string` | `"Steam Deck Compatibility"` | A valid Notion property name | Yes |
 </details>
 
+<details>
+<summary><code>gameDevelopers</code></summary>
+
+The developer(s) of the game. The database field in Notion must be of type `Multi-select`.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `object` | See item below | See sections below | No |
+
+```json
+"gameDevelopers": {
+	"enabled": true,
+	"notionProperty": "Developers"
+}
+```
+
+<h3>Possible values</h3>
+
+<h4><code>enabled</code></h4>
+
+Whether or not the developer(s) of the game should be set in the database.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `boolean` | `true` | `true` or `false` | Yes |
+
+<h4><code>notionProperty</code></h4>
+
+The name of the Notion property to set the developer(s) in.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `string` | `"Developers"` | A valid Notion property name | Yes |
+</details>
+
+<details>
+<summary><code>gamePublishers</code></summary>
+
+The publisher(s) of the game. The database field in Notion must be of type `Multi-select`.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `object` | See item below | See sections below | No |
+
+```json
+"gamePublishers": {
+	"enabled": true,
+	"notionProperty": "Publishers"
+}
+```
+
+<h3>Possible values</h3>
+
+<h4><code>enabled</code></h4>
+
+Whether or not the publisher(s) of the game should be set in the database.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `boolean` | `true` | `true` or `false` | Yes |
+
+<h4><code>notionProperty</code></h4>
+
+The name of the Notion property to set the publisher(s) in.
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `string` | `"Publishers"` | A valid Notion property name | Yes |
+</details>
+
 ## Related projects
 
 You can get a list of all games you own on Steam, Epic Games or GOG using the [Steam App ID Finder](https://github.com/NikkelM/Steam-App-ID-Finder). This project also includes a utility to get the Steam App IDs from just a list of game names.

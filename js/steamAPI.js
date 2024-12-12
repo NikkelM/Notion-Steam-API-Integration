@@ -36,7 +36,7 @@ export async function getSteamAppInfoDirect(appId, retryCount = 0) {
 // Gets app info from the SteamUser API
 // Does not offer all info that the Steam store API does
 export async function getSteamAppInfoSteamUser(appIds) {
-	console.log(`\nGetting app info from SteamUser API for ${appIds.length} games...\n`);
+	console.log(`\nGetting app info from the SteamUser API for ${appIds.length} games...\n`);
 
 	return new Promise(async (resolve) => {
 		// Passing true as the third argument automatically requests access tokens, which are required for some apps

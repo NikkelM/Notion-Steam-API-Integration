@@ -41,6 +41,12 @@ export async function getGameProperties(appInfoDirect, appInfoSteamUser, appInfo
 			case "steamDeckCompatibility":
 				outputProperties = getSteamDeckCompatibility(propertyValue, appInfoSteamUser, outputProperties);
 				break;
+			case "gameDevelopers":
+				outputProperties = await getGameDevelopers(propertyValue, appInfoDirect, outputProperties);
+				break;
+			case "gamePublishers":
+				outputProperties = await getGamePublishers(propertyValue, appInfoDirect, outputProperties);
+				break;
 		}
 	}
 
@@ -287,6 +293,36 @@ function getSteamDeckCompatibility(steamDeckCompatibilityProperty, appInfoSteamU
 		"select": {
 			"name": compatibility
 		}
+	};
+
+	return outputProperties;
+}
+
+function getGameDevelopers(developerProperty, appInfoDirect, outputProperties) {
+	if (!developerProperty.enabled || !appInfoDirect.developers) { return outputProperties; }
+
+	// Output property is multi-select, as games can have multiple developers in the API
+	outputProperties[developerProperty.notionProperty] = {
+		"multi_select": appInfoDirect.developers.map((developer) => {
+			return {
+				"name": developer
+			}
+		})
+	};
+
+	return outputProperties;
+}
+
+function getGamePublishers(publisherProperty, appInfoDirect, outputProperties) {
+	if (!publisherProperty.enabled || !appInfoDirect.publishers) { return outputProperties; }
+
+	// Output property is multi-select, as games can have multiple publishers in the API
+	outputProperties[publisherProperty.notionProperty] = {
+		"multi_select": appInfoDirect.publishers.map((publisher) => {
+			return {
+				"name": publisher
+			}
+		})
 	};
 
 	return outputProperties;
