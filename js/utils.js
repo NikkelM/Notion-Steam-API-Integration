@@ -85,7 +85,9 @@ function isStoreAPIRequired() {
 		CONFIG.gameProperties.coverImage?.enabled ||
 		CONFIG.gameProperties.releaseDate?.enabled ||
 		CONFIG.gameProperties.gameDescription?.enabled ||
-		CONFIG.gameProperties.gamePrice?.enabled
+		CONFIG.gameProperties.gamePrice?.enabled ||
+		CONFIG.gameProperties.gameDevelopers?.enabled ||
+		CONFIG.gameProperties.gamePublishers?.enabled
 	)
 }
 

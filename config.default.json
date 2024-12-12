@@ -49,6 +49,14 @@
 		"steamDeckCompatibility": {
 			"enabled": true,
 			"notionProperty": "Steam Deck Compatibility"
+		},
+		"gameDevelopers": {
+			"enabled": true,
+			"notionProperty": "Developers"
+		},
+		"gamePublishers": {
+			"enabled": true,
+			"notionProperty": "Publishers"
 		}
 	}
 }
