@@ -48,6 +48,14 @@ The schema can be found in the `config.schema.json` file and used within your `c
 
 *NOTE: The script will test your provided `config.json` against this schema, so make sure your configuration is valid.*
 
+Note that *only if* you want to fetch tag data, Steam requires you to be authenticated with your Steam account.
+For this, provide your Steam account name and password in the `steamUser` property of the configuration file.
+The integration does not transmit this data over the internet, everything is done locally.
+If you have Steam Guard enabled, you will also need to provide the Steam Guard code when running the integration.
+
+Once you have authenticated once, the integration will store a local refresh token for ~200 days before you need to log in again.
+You can then replace the `accountName` and `password` with the `useRefreshToken` property set to `true`, which will make the integration use the stored refresh token to authenticate you to the Steam API.
+
 ### Properties
 
 The following is a list of all configuration items, their defaults and the values they can take.
@@ -115,6 +123,18 @@ If true, the integration will always update entries in the Notion database that 
 </details>
 
 <details>
+<summary><code>steamUser</code></summary>
+
+Login details to authenticate to your Steam account. This is required to be able to fetch tag data. If you have Steam Guard enabled, you will need to provide the Steam Guard code when running the app. Once logged in, the integration will store a local refresh token for ~200 days before you need to log in again. The integration does not transmit any of your login details anywhere, they are used internally to authenticate yourself to the Steam API. If you do not want to fetch tag data, you do not need to provide this property!
+
+| Type | Default value | Possible values | Required |
+|---|---|---|---|
+| `useRefreshToken` | `true` | `true` only | Yes, if you want to use an already stored refresh token. This requires a previous login using `accountName` and `password`. |
+| `accountName` | `<steamAccountName>` | Your Steam account name | Yes, if you do not already have a stored refresh token and set `useRefreshToken` to `true`. |
+| `password` | `<steamAccountPassword>` | Your Steam account password | Yes, if you do not already have a stored refresh token and set `useRefreshToken` to `true`. |
+</details>
+
+<details>
 <summary><code>gameProperties</code></summary>
 
 Which game properties should be fetched when a new Steam game is detected, and the name of the corresponding field in the Notion database.
@@ -143,7 +163,8 @@ Which game properties should be fetched when a new Steam game is detected, and t
 	},
 	"tags": {
 		"enabled": true,
-		"notionProperty": "Tags"
+		"notionProperty": "Tags",
+		"tagLanguage": "english"
 	}
 }
 ```
@@ -347,7 +368,7 @@ The name of the Notion property to set the user review score in.
 <details>
 <summary><code>tags</code></summary>
 
-The user-defined tags of the game as they can be seen on the store page. The database field in Notion must be of type `Multi-select`.
+Requires Steam login! Provide accountName and password in the top-level `steamUser` property! The user-defined tags of the game as they can be seen on the store page. The database field in Notion must be of type `Multi-select`.
 
 | Type | Default value | Possible values | Required |
 |---|---|---|---|
@@ -357,7 +378,7 @@ The user-defined tags of the game as they can be seen on the store page. The dat
 "tags": {
 	"enabled": true,
 	"notionProperty": "Tags",
-	"language": "english"
+	"tagLanguage": "english"
 }
 ```
 
@@ -379,13 +400,13 @@ The name of the Notion property to set the tags in. This field must be of type `
 |---|---|---|---|
 | `string` | `"Tags"` | A valid Notion property name | Yes |
 
-<h4><code>language</code></h4>
+<h4><code>tagLanguage</code></h4>
 
 The language of the tags, e.g. "english" or "spanish".
 
 | Type | Default value | Possible values | Required |
 |---|---|---|---|
-| `string` | `"english"` | Valid language names. Invalid names return an error from the Steam API. | Yes |
+| `string` | `"english"` | Valid full language names. Invalid names return an error from the Steam API. | Yes |
 
 </details>
 

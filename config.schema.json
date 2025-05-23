@@ -41,6 +41,50 @@
 			"type": "boolean",
 			"default": false
 		},
+		"steamUser": {
+			"description": "Login details to authenticate to your Steam account. This is required to be able to fetch tag data. If you have Steam Guard enabled, you will need to provide the Steam Guard code when running the app. Once logged in, the integration will store a local refresh token for ~200 days before you need to log in again. The integration does not transmit any of your login details anywhere, they are used internally to authenticate yourself to the Steam API. If you do not want to fetch tag data, you do not need to provide this property!",
+			"type": "object",
+			"default": {
+				"accountName": "<steamAccountName>",
+				"password": "<steamAccountPassword>"
+			},
+			"additionalProperties": false,
+			"properties": {
+				"useRefreshToken": {
+					"description": "If true, the integration will try to use the refresh token stored in the local database to authenticate to your Steam account. You can only set this to \"true\" if you have previously logged in using \"accountName\" and \"password\", and the refresh token is still valid.",
+					"type": "boolean",
+					"default": false
+				},
+				"accountName": {
+					"description": "Your Steam account name.",
+					"type": "string",
+					"default": "<steamAccountName>"
+				},
+				"password": {
+					"description": "Your Steam account password.",
+					"type": "string",
+					"default": "<steamAccountPassword>"
+				}
+			},
+			"oneOf": [
+				{
+					"required": [
+						"accountName",
+						"password"
+					]
+				},
+				{
+					"properties": {
+						"useRefreshToken": {
+							"const": true
+						}
+					},
+					"required": [
+						"useRefreshToken"
+					]
+				}
+			]
+		},
 		"gameProperties": {
 			"description": "Which game properties should be fetched when a new Steam game is detected, and the name of the corresponding field in the Notion database.",
 			"type": "object",
@@ -69,7 +113,8 @@
 				},
 				"tags": {
 					"enabled": true,
-					"notionProperty": "Tags"
+					"notionProperty": "Tags",
+					"tagLanguage": "english"
 				},
 				"gameDescription": {
 					"enabled": true,
@@ -227,30 +272,30 @@
 							"type": "string",
 							"default": "percentage",
 							"oneOf": [
-									{
-										"const": "percentage",
-										"title": "Notion database field type: \"Number\". A percentage value formatted as a float from 0.00-1.00."
-									},
-									{
-										"const": "sentiment",
-										"title": "Notion database field type: \"Select\". A sentiment value such as \"Overwhelmingly Positive\" or \"Mixed\"."
-									},
-									{
-										"const": "total",
-										"title": "Notion database field type: \"Number\". The total number of reviews submitted for the game, across all languages."
-									},
-									{
-										"const": "positive",
-										"title": "Notion database field type: \"Number\". The total number of positive reviews submitted for the game, across all languages."
-									},
-									{
-										"const": "negative",
-										"title": "Notion database field type: \"Number\". The total number of negative reviews submitted for the game, across all languages."
-									},
-									{
-										"const": "positive/negative",
-										"title": "Notion database field type: \"Text\". The total number of positive and negative reviews submitted for the game, across all languages, formatted as \"{numPositive} positive / {numNegative} negative\"."
-									}
+								{
+									"const": "percentage",
+									"title": "Notion database field type: \"Number\". A percentage value formatted as a float from 0.00-1.00."
+								},
+								{
+									"const": "sentiment",
+									"title": "Notion database field type: \"Select\". A sentiment value such as \"Overwhelmingly Positive\" or \"Mixed\"."
+								},
+								{
+									"const": "total",
+									"title": "Notion database field type: \"Number\". The total number of reviews submitted for the game, across all languages."
+								},
+								{
+									"const": "positive",
+									"title": "Notion database field type: \"Number\". The total number of positive reviews submitted for the game, across all languages."
+								},
+								{
+									"const": "negative",
+									"title": "Notion database field type: \"Number\". The total number of negative reviews submitted for the game, across all languages."
+								},
+								{
+									"const": "positive/negative",
+									"title": "Notion database field type: \"Text\". The total number of positive and negative reviews submitted for the game, across all languages, formatted as \"{numPositive} positive / {numNegative} negative\"."
+								}
 							]
 						},
 						"notionProperty": {
@@ -266,7 +311,7 @@
 					]
 				},
 				"tags": {
-					"description": "The user-defined tags of the game as they can be seen on the store page. The database field in Notion must be of type \"Multi-select\".",
+					"description": "Requires Steam login! Provide \"accountName\" and \"password\" in the top-level \"steamUser\" property, \"refreshToken\" if you already logged in before! The user-defined tags of the game as they can be seen on the store page. The database field in Notion must be of type \"Multi-select\".",
 					"type": "object",
 					"default": {
 						"enabled": true,
@@ -456,5 +501,29 @@
 		"updateInterval",
 		"steamAppIdProperty",
 		"gameProperties"
+	],
+	"allOf": [
+		{
+			"if": {
+				"properties": {
+					"gameProperties": {
+						"properties": {
+							"tags": {
+								"properties": {
+									"enabled": {
+										"const": true
+									}
+								}
+							}
+						}
+					}
+				}
+			},
+			"then": {
+				"required": [
+					"steamUser"
+				]
+			}
+		}
 	]
 }

@@ -93,7 +93,7 @@ async function updateNotionDatabase() {
 				// Get info about the game's review score from the reviews API, if required
 				const appInfoReviews = reviewAPIRequired
 					? await getSteamReviewScoreDirect(steamAppId)
-					: null; 
+					: null;
 
 				let notionProperties = await getGameProperties(appInfoDirect, appInfoSteamUser[steamAppId], appInfoReviews, steamAppId);
 
@@ -106,7 +106,7 @@ async function updateNotionDatabase() {
 			}
 		}
 	}
-	
+
 	// Only update the last updated time if there were no errors during execution and we didn't hit the Steam API request limit
 	// This makes sure that we can find the games that had errors or that we had to omit again the next time
 	if (!hadError && !hitSteamAPILimit) {
