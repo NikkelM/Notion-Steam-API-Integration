@@ -8,6 +8,7 @@ export const CONFIG = getConfig();
 export const localDatabase = await loadLocalDatabase();
 export const storeAPIRequired = isStoreAPIRequired();
 export const steamUserAPIRequired = isSteamUserAPIRequired();
+export const steamUserLoginRequired = isSteamUserLoginRequired();
 export const reviewAPIRequired = isReviewAPIRequired();
 
 // ---------- Config ----------
@@ -52,7 +53,7 @@ async function loadLocalDatabase() {
 	// Reset the local database if the user wants to
 	if (CONFIG.forceReset) {
 		// Set a timer of 10 seconds to give the user time to cancel the reset
-		console.log("Resetting local database in 10 seconds. Kill the process to cancel (e.g. using Ctrl+C).");
+		console.log("Resetting local database in 10 seconds. Kill the process to cancel (using Ctrl+C on Windows or Cmd+C on Mac).");
 		await new Promise(resolve => setTimeout(resolve, 10000));
 		console.log("Resetting local database...\n");
 		await db.clear();
@@ -78,6 +79,39 @@ export async function addGameToLocalDatabase(pageId, steamAppId) {
 	await localDatabase.put(pageId, steamAppId);
 }
 
+export async function addRefreshTokenToLocalDatabase(refreshToken) {
+	await localDatabase.put("steamUserRefreshToken", refreshToken);
+}
+
+export async function getRefreshTokenFromLocalDatabase() {
+	try {
+		var refreshToken = await localDatabase.get("steamUserRefreshToken");
+	} catch (error) {
+		if (error.notFound) {
+			console.log("No refresh token found in local database, prompting for login...");
+			return null;
+		} else {
+			console.error(`Could not access database: ${error.message}. Perhaps another instance of the integration is already running?`);
+			process.exit(1);
+		}
+	}
+	// Decode the JWT
+	if (refreshToken) {
+		const parts = refreshToken.split('.');
+		if (parts.length !== 3) {
+			console.error("Invalid refresh token format.");
+			return null;
+		}
+		const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
+		const now = Math.floor(Date.now() / 1000);
+		if (payload.exp < now) {
+			console.error("Refresh token expired.");
+			return null;
+		}
+		return refreshToken;
+	}
+}
+
 // ---------- Required APIs ----------
 
 function isStoreAPIRequired() {
@@ -98,6 +132,12 @@ function isSteamUserAPIRequired() {
 		CONFIG.gameProperties.gameIcon?.enabled ||
 		CONFIG.gameProperties.coverImage?.enabled ||
 		CONFIG.gameProperties.steamDeckCompatibility?.enabled
+	);
+}
+
+function isSteamUserLoginRequired() {
+	return (
+		CONFIG.gameProperties.tags?.enabled
 	);
 }
 

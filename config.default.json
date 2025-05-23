@@ -6,6 +6,10 @@
 	"steamAppIdProperty": "Steam App ID",
 	"forceReset": false,
 	"alwaysUpdate": false,
+	"steamUser": {
+		"accountName": "<steamAccountName>",
+		"password": "<steamPassword>"
+	},
 	"gameProperties": {
 		"gameName": {
 			"enabled": true,
