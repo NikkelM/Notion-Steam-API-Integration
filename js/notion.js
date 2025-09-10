@@ -84,7 +84,6 @@ export async function checkNotionPropertiesExistence() {
 		database_id: DATABASE_ID
 	});
 
-	let response;
 	if (CONFIG.notionDataSourceId) {
 		if (databaseResponse.data_sources.find(ds => ds.id === CONFIG.notionDataSourceId) === undefined) {
 			console.error("Error validating configuration file: Notion database does not contain a data source with the ID specified in the configuration file. Check the \"notionDataSourceId\" property in your config.json");
@@ -97,7 +96,7 @@ export async function checkNotionPropertiesExistence() {
 		process.exit(1);
 	}
 
-	response = await NOTION.dataSources.retrieve({
+	const response = await NOTION.dataSources.retrieve({
 		data_source_id: DATASOURCE_ID
 	});
 
