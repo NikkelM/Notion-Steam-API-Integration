@@ -5,7 +5,7 @@
 	"description": "Notion integration to fetch data from the Steam API and populate a database given Steam App ID's.",
 	"main": "index.js",
 	"dependencies": {
-		"@notionhq/client": "^1.0.1",
+		"@notionhq/client": "^5.0.0",
 		"jsonschema": "^1.4.1",
 		"level": "^8.0.0",
 		"steam-user": "^5.2.2"
