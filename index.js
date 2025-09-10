@@ -69,7 +69,7 @@ async function updateNotionDatabase() {
 
 	// Limit the number of games to avoid hitting the Steam API rate limit, if required
 	if (Object.keys(updatedPagesSteamAppIds).length > 50 && storeAPIRequired) {
-		console.log("The Steam store API limits the allowed amount of requests in quick succession. Some games will be updated later.");
+		console.log("The Steam Store API limits the allowed amount of requests in quick succession. Some games will be updated later.");
 		hitSteamAPILimit = true;
 		updatedPagesSteamAppIds = Object.fromEntries(Object.entries(updatedPagesSteamAppIds).slice(0, 50));
 	}
@@ -96,6 +96,9 @@ async function updateNotionDatabase() {
 					: null;
 
 				let notionProperties = await getGameProperties(appInfoDirect, appInfoSteamUser[steamAppId], appInfoReviews, steamAppId);
+				if (!notionProperties) {
+					continue;
+				}
 
 				updateNotionPage(pageId, notionProperties);
 				addGameToLocalDatabase(pageId, steamAppId);
@@ -114,7 +117,7 @@ async function updateNotionDatabase() {
 	}
 
 	if (hitSteamAPILimit) {
-		console.log(`Done updating Notion database. Waiting 1 minute until we can ping the Steam store API again....\n`);
+		console.log(`Done updating Notion database. Waiting 1 minute until we can ping the Steam Store API again....\n`);
 
 		// Run this method again in 1 minute
 		setTimeout(main, 60000);
