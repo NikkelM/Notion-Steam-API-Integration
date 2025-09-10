@@ -20,6 +20,11 @@
 			"type": "string",
 			"default": ""
 		},
+		"notionDataSourceId": {
+			"description": "The ID of the data source you want to run the integration on. This is required if you have multiple data sources in your database. You can find the ID under the \"Manage data sources\" menu in the database settings. If you only have one data source (which is the default), you can leave this property empty.",
+			"type": "string",
+			"default": ""
+		},
 		"updateInterval": {
 			"description": "The interval in which the integration will check for updates to your Notion database. The value is in milliseconds. Must be at least 60000 (1 minute).",
 			"type": "integer",

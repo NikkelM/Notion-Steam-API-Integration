@@ -7,6 +7,11 @@ export async function getGameProperties(appInfoDirect, appInfoSteamUser, appInfo
 	let icon;
 	let result = {};
 
+	if (!appInfoDirect && !appInfoSteamUser) {
+		console.warn(`App info for app ID ${steamAppId} could not be retrieved from both the Steam Store API and the SteamUser API. The game probably does not exist on Steam.`);
+		return null;
+	}
+
 	for (const [propertyName, propertyValue] of Object.entries(CONFIG.gameProperties)) {
 		switch (propertyName) {
 			case "gameName":
@@ -58,7 +63,7 @@ export async function getGameProperties(appInfoDirect, appInfoSteamUser, appInfo
 function getGameNameProperty(nameProperty, appInfoSteamUser, outputProperties) {
 	if (!nameProperty.enabled || !appInfoSteamUser.name) { return outputProperties; }
 
-	// We use the title from the Steam User API as this stops us from always having to ping the Steam store API, as most users will want to get the game name
+	// We use the title from the Steam User API as this stops us from always having to ping the Steam Store API, as most users will want to get the game name
 	const gameTitle = appInfoSteamUser.name;
 
 	const propertyType = nameProperty.isPageTitle
@@ -83,7 +88,7 @@ function getGameCoverImage(coverProperty, appInfoDirect, appInfoSteamUser) {
 	// Don't set a cover image if it is disabled, or if there is no cover image available
 	if (!coverProperty.enabled || (!appInfoDirect.header_image && !appInfoSteamUser.header_image?.english && !coverProperty.default)) { return null; }
 
-	// Use the URL from the Steam store API if available, else use the SteamUser API if available, else use the default image
+	// Use the URL from the Steam Store API if available, else use the SteamUser API if available, else use the default image
 	const coverUrl = appInfoDirect.header_image
 		? appInfoDirect.header_image
 		: (appInfoSteamUser.header_image?.english
@@ -101,7 +106,7 @@ function getGameCoverImage(coverProperty, appInfoDirect, appInfoSteamUser) {
 function getGameIcon(iconProperty, appInfoSteamUser) {
 	if (!iconProperty.enabled || (!appInfoSteamUser.icon && !iconProperty.default)) { return null; }
 
-	// Game icon URL is not available through the Steam store API, so we have to use the SteamUser API
+	// Game icon URL is not available through the Steam Store API, so we have to use the SteamUser API
 	const iconUrl = appInfoSteamUser.icon
 		? `https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/${appInfoSteamUser.gameid}/${appInfoSteamUser.icon}.jpg`
 		: iconProperty.default;
@@ -138,7 +143,7 @@ function getGameReleaseDate(releaseDateProperty, appInfoDirect, outputProperties
 		} else if (dateSpecificity == 3) {
 			releaseDate = new Date(appInfoDirect.release_date.date + ' 00:00 UTC').toISOString();
 		} else {
-			console.warn('!!!The release date format received from the Steam store API is unknown to the integration.\n!!!Please report this to the developer and include the following output:');
+			console.warn('The release date format received from the Steam Store API is unknown to the integration.\nPlease report this to the developer on https://github.com/NikkelM/Notion-Steam-API-Integration/issues and include the following output:');
 			console.log(appInfoDirect);
 			return outputProperties;
 		}
@@ -211,7 +216,7 @@ function getGameReviewScore(reviewScoreProperty, appInfoReviews, outputPropertie
 async function getGameTags(tagsProperty, appInfoSteamUser, outputProperties) {
 	if (!tagsProperty.enabled) { return outputProperties; }
 
-	// The tags are not available through the Steam store API, so we have to use the SteamUser API instead
+	// The tags are not available through the Steam Store API, so we have to use the SteamUser API instead
 	const tags = appInfoSteamUser.store_tags
 		? await getSteamTagNames(appInfoSteamUser.store_tags, tagsProperty.tagLanguage).then((tags) => { return tags; })
 		: null;
@@ -230,7 +235,7 @@ async function getGameTags(tagsProperty, appInfoSteamUser, outputProperties) {
 }
 
 function getGameDescription(gameDescriptionProperty, appInfoDirect, outputProperties) {
-	// Set no description if the value doesn't exist in the Steam store API response, or it is an empty string
+	// Set no description if the value doesn't exist in the Steam Store API response, or it is an empty string
 	if (!gameDescriptionProperty.enabled || !appInfoDirect.short_description) { return outputProperties; }
 
 	// Notion limits text fields to 2000 characters

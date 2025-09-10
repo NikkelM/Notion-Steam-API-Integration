@@ -4,7 +4,9 @@ import { CONFIG, localDatabase } from './utils.js';
 // ---------- Notion API ----------
 
 const NOTION = new Client({ auth: CONFIG.notionIntegrationKey });
-const databaseId = CONFIG.notionDatabaseId;
+const DATABASE_ID = CONFIG.notionDatabaseId;
+// Will be set to the only available data source if none is provided in the config and only one exists in the database
+let DATASOURCE_ID = CONFIG.notionDataSourceId || null;
 
 // Get a list of games in the Notion database that have the `Steam App ID` field set and were last edited after our last check. 
 export async function getGamesFromNotionDatabase() {
@@ -33,8 +35,8 @@ export async function getGamesFromNotionDatabase() {
 
 // Fetch all pages from the database that have been edited since we last accessed the database, and that have a Steam App ID set
 async function queryDatabase(cursor, lastUpdatedAt) {
-	return await NOTION.databases.query({
-		database_id: databaseId,
+	return await NOTION.dataSources.query({
+		data_source_id: DATASOURCE_ID,
 		page_size: 100,
 		start_cursor: cursor,
 		filter: {
@@ -78,8 +80,24 @@ export async function checkNotionPropertiesExistence() {
 	// Add the Steam App ID property to the list of properties to check
 	properties.push(CONFIG.steamAppIdProperty);
 
-	const response = await NOTION.databases.retrieve({
-		database_id: databaseId
+	const databaseResponse = await NOTION.databases.retrieve({
+		database_id: DATABASE_ID
+	});
+
+	if (CONFIG.notionDataSourceId) {
+		if (databaseResponse.data_sources.find(ds => ds.id === CONFIG.notionDataSourceId) === undefined) {
+			console.error("Error validating configuration file: Notion database does not contain a data source with the ID specified in the configuration file. Check the \"notionDataSourceId\" property in your config.json");
+			process.exit(1);
+		}
+	} else if (databaseResponse.data_sources.length == 1) {
+		DATASOURCE_ID = databaseResponse.data_sources[0].id;
+	} else {
+		console.error("Error validating configuration file: Notion database contains multiple data sources, but no data source ID to use is specified in the configuration file. Provide the \"notionDataSourceId\" property in your config.json");
+		process.exit(1);
+	}
+
+	const response = await NOTION.dataSources.retrieve({
+		data_source_id: DATASOURCE_ID
 	});
 
 	// If any of the properties are not found in the database, exit the program

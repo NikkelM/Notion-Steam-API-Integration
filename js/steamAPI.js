@@ -37,7 +37,7 @@ console.log("Logging in to Steam", steamUserConfig.anonymous ? "anonymously..." 
 steamClient.logOn(steamUserConfig);
 await new Promise(resolve => steamClient.on('loggedOn', resolve));
 
-// Gets app info directly from the Steam store API
+// Gets app info directly from the Steam Store API
 // Does not offer all info that the SteamUser API does
 // For some apps, the API does not return any info, even though the app exists
 export async function getSteamAppInfoDirect(appId, retryCount = 0) {
@@ -53,19 +53,19 @@ export async function getSteamAppInfoDirect(appId, retryCount = 0) {
 	// If the request failed, we try again
 	if (!result && retryCount < 3) {
 		retryCount++;
-		console.log(`Failed to get app info for app ${appId} from the Steam store API. Retrying in ${retryCount} second(s)...`);
-		await new Promise(r => setTimeout(r, retryCount * 1000));
+		console.log(`Failed to get app info for app ${appId} from the Steam Store API. Retrying in ${retryCount**2} second(s)...`);
+		await new Promise(r => setTimeout(r, (retryCount**2) * 1000));
 		return getSteamAppInfoDirect(appId, retryCount);
 	} else if (retryCount >= 3) {
-		console.log(`Failed to get app info for app ${appId} from the Steam store API. Some info may still be available using the SteamUser API.`);
-		return {};
+		console.log(`Failed to get app info for app ${appId} from the Steam Store API. Some info may still be available using the SteamUser API.`);
+		return null;
 	}
 
 	return result;
 }
 
 // Gets app info from the SteamUser API
-// Does not offer all info that the Steam store API does
+// Does not offer all info that the Steam Store API does
 export async function getSteamAppInfoSteamUser(appIds) {
 	console.log(`\nGetting app info from the SteamUser API for ${appIds.length} games...\n`);
 

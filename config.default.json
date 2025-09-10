@@ -2,6 +2,7 @@
 	"$schema": "config.schema.json",
 	"notionIntegrationKey": "<secretKey>",
 	"notionDatabaseId": "<databaseId>",
+	"notionDataSourceId": "<dataSourceIdIfMultipleDataSources>",
 	"updateInterval": 60000,
 	"steamAppIdProperty": "Steam App ID",
 	"forceReset": false,
