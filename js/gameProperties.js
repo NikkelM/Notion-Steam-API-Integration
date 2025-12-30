@@ -61,7 +61,7 @@ export async function getGameProperties(appInfoDirect, appInfoSteamUser, appInfo
 }
 
 function getGameNameProperty(nameProperty, appInfoSteamUser, outputProperties) {
-	if (!nameProperty.enabled || !appInfoSteamUser.name) { return outputProperties; }
+	if (!nameProperty.enabled || !appInfoSteamUser?.name) { return outputProperties; }
 
 	// We use the title from the Steam User API as this stops us from always having to ping the Steam Store API, as most users will want to get the game name
 	const gameTitle = appInfoSteamUser.name;
@@ -86,12 +86,12 @@ function getGameNameProperty(nameProperty, appInfoSteamUser, outputProperties) {
 
 function getGameCoverImage(coverProperty, appInfoDirect, appInfoSteamUser) {
 	// Don't set a cover image if it is disabled, or if there is no cover image available
-	if (!coverProperty.enabled || (!appInfoDirect.header_image && !appInfoSteamUser.header_image?.english && !coverProperty.default)) { return null; }
+	if (!coverProperty.enabled || (!appInfoDirect?.header_image && !appInfoSteamUser?.header_image?.english && !coverProperty.default)) { return null; }
 
 	// Use the URL from the Steam Store API if available, else use the SteamUser API if available, else use the default image
-	const coverUrl = appInfoDirect.header_image
+	const coverUrl = appInfoDirect?.header_image
 		? appInfoDirect.header_image
-		: (appInfoSteamUser.header_image?.english
+		: (appInfoSteamUser?.header_image?.english
 			? `https://cdn.cloudflare.steamstatic.com/steam/apps/${appInfoSteamUser.gameid}/${appInfoSteamUser.header_image.english}`
 			: coverProperty.default);
 
@@ -104,7 +104,7 @@ function getGameCoverImage(coverProperty, appInfoDirect, appInfoSteamUser) {
 }
 
 function getGameIcon(iconProperty, appInfoSteamUser) {
-	if (!iconProperty.enabled || (!appInfoSteamUser.icon && !iconProperty.default)) { return null; }
+	if (!iconProperty.enabled || (!appInfoSteamUser?.icon && !iconProperty.default)) { return null; }
 
 	// Game icon URL is not available through the Steam Store API, so we have to use the SteamUser API
 	const iconUrl = appInfoSteamUser.icon
@@ -124,7 +124,7 @@ function getGameReleaseDate(releaseDateProperty, appInfoDirect, outputProperties
 
 	// Note: If no release date is available, we don't set it at all in the database
 	let releaseDate;
-	if (appInfoDirect.release_date?.date) {
+	if (appInfoDirect?.release_date?.date) {
 		// We need to distinguish three cases: Only the year is given ('2023'), year and month ('March 2023'), or year, month and day ('13 Mar, 2023')
 		// In cases where data is missing, we add the last day of the year or the first day of the month (as the last day of the month differs between months)
 		// We always add 00:00 UTC as the time, as the date is always given in UTC and we don't want to convert it to the local timezone
@@ -217,7 +217,7 @@ async function getGameTags(tagsProperty, appInfoSteamUser, outputProperties) {
 	if (!tagsProperty.enabled) { return outputProperties; }
 
 	// The tags are not available through the Steam Store API, so we have to use the SteamUser API instead
-	const tags = appInfoSteamUser.store_tags
+	const tags = appInfoSteamUser?.store_tags
 		? await getSteamTagNames(appInfoSteamUser.store_tags, tagsProperty.tagLanguage).then((tags) => { return tags; })
 		: null;
 
@@ -236,7 +236,7 @@ async function getGameTags(tagsProperty, appInfoSteamUser, outputProperties) {
 
 function getGameDescription(gameDescriptionProperty, appInfoDirect, outputProperties) {
 	// Set no description if the value doesn't exist in the Steam Store API response, or it is an empty string
-	if (!gameDescriptionProperty.enabled || !appInfoDirect.short_description) { return outputProperties; }
+	if (!gameDescriptionProperty.enabled || !appInfoDirect?.short_description) { return outputProperties; }
 
 	// Notion limits text fields to 2000 characters
 	const gameDescription = appInfoDirect.short_description.substring(0, 2000);
@@ -265,7 +265,7 @@ function getGameStorePage(storePageProperty, steamAppId, outputProperties) {
 }
 
 function getGamePrice(priceProperty, appInfoDirect, outputProperties) {
-	if (!priceProperty.enabled || appInfoDirect.price_overview?.initial === undefined || appInfoDirect.price_overview?.initial === null) { return outputProperties; }
+	if (!priceProperty.enabled || appInfoDirect?.price_overview?.initial === undefined || appInfoDirect?.price_overview?.initial === null) { return outputProperties; }
 
 	const price = appInfoDirect.price_overview.initial / 100;
 
@@ -280,7 +280,7 @@ function getSteamDeckCompatibility(steamDeckCompatibilityProperty, appInfoSteamU
 	if (!steamDeckCompatibilityProperty.enabled) { return outputProperties; }
 
 	let compatibility = "Unknown";
-	switch (appInfoSteamUser.steam_deck_compatibility?.category) {
+	switch (appInfoSteamUser?.steam_deck_compatibility?.category) {
 		case "1":
 			compatibility = "Unsupported";
 			break;
@@ -304,7 +304,7 @@ function getSteamDeckCompatibility(steamDeckCompatibilityProperty, appInfoSteamU
 }
 
 function getGameDevelopers(developerProperty, appInfoDirect, outputProperties) {
-	if (!developerProperty.enabled || !appInfoDirect.developers) { return outputProperties; }
+	if (!developerProperty.enabled || !appInfoDirect?.developers) { return outputProperties; }
 
 	// Output property is multi-select, as games can have multiple developers in the API
 	outputProperties[developerProperty.notionProperty] = {
@@ -319,7 +319,7 @@ function getGameDevelopers(developerProperty, appInfoDirect, outputProperties) {
 }
 
 function getGamePublishers(publisherProperty, appInfoDirect, outputProperties) {
-	if (!publisherProperty.enabled || !appInfoDirect.publishers) { return outputProperties; }
+	if (!publisherProperty.enabled || !appInfoDirect?.publishers) { return outputProperties; }
 
 	// Output property is multi-select, as games can have multiple publishers in the API
 	outputProperties[publisherProperty.notionProperty] = {
