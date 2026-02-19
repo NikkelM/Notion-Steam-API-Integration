@@ -2,6 +2,28 @@ import SteamUser from 'steam-user';
 import { CONFIG, addRefreshTokenToLocalDatabase, getRefreshTokenFromLocalDatabase, steamUserLoginRequired } from './utils.js';
 
 // ---------- Steam API ----------
+function logOn(steamClient, config) {
+	return new Promise((resolve, reject) => {
+		const cleanup = () => {
+			steamClient.removeListener('loggedOn', onLoggedOn);
+			steamClient.removeListener('error', onError);
+		};
+
+		const onLoggedOn = () => {
+			cleanup();
+			resolve();
+		};
+
+		const onError = (err) => {
+			cleanup();
+			reject(err);
+		};
+
+		steamClient.once('loggedOn', onLoggedOn);
+		steamClient.once('error', onError);
+		steamClient.logOn(config);
+	});
+}
 
 let steamUserConfig = {};
 
@@ -12,15 +34,15 @@ if (steamUserLoginRequired) {
 			refreshToken: refreshToken,
 		};
 	} else
-	if (CONFIG.steamUser.accountName && CONFIG.steamUser.password) {
-		steamUserConfig = {
-			accountName: CONFIG.steamUser.accountName,
-			password: CONFIG.steamUser.password,
+		if (CONFIG.steamUser.accountName && CONFIG.steamUser.password) {
+			steamUserConfig = {
+				accountName: CONFIG.steamUser.accountName,
+				password: CONFIG.steamUser.password,
+			}
+		} else {
+			console.error("\"steamUser.useRefreshToken\" was provided in the config, but no refresh token found in local database. \"steamUser.accountName\" and \"steamUser.password\" are required in the config, but they were not provided!");
+			process.exit(1);
 		}
-	} else {
-		console.error("\"steamUser.useRefreshToken\" was provided in the config, but no refresh token found in local database. \"steamUser.accountName\" and \"steamUser.password\" are required in the config, but they were not provided!");
-		process.exit(1);
-	}
 } else {
 	steamUserConfig = {
 		anonymous: true
@@ -34,8 +56,29 @@ steamClient.on('refreshToken', async function (refreshToken) {
 });
 
 console.log("Logging in to Steam", steamUserConfig.anonymous ? "anonymously..." : (steamUserConfig.accountName ? `as ${steamUserConfig.accountName}...` : "using a refresh token..."));
-steamClient.logOn(steamUserConfig);
-await new Promise(resolve => steamClient.on('loggedOn', resolve));
+
+try {
+	await logOn(steamClient, steamUserConfig);
+} catch (error) {
+	if (steamUserConfig.refreshToken) {
+		console.log("Login with refresh token failed. Removing it and trying account/password...");
+		await addRefreshTokenToLocalDatabase(null);
+
+		if (CONFIG.steamUser.accountName && CONFIG.steamUser.password) {
+			steamUserConfig = {
+				accountName: CONFIG.steamUser.accountName,
+				password: CONFIG.steamUser.password,
+			};
+			await logOn(steamClient, steamUserConfig);
+		} else {
+			console.error("No account name/password available. Provide credentials or a valid refresh token.");
+			process.exit(1);
+		}
+	} else {
+		console.error("Login to Steam failed:", error?.message || error);
+		process.exit(1);
+	}
+}
 
 // Gets app info directly from the Steam Store API
 // Does not offer all info that the SteamUser API does
@@ -53,8 +96,8 @@ export async function getSteamAppInfoDirect(appId, retryCount = 0) {
 	// If the request failed, we try again
 	if (!result && retryCount < 3) {
 		retryCount++;
-		console.log(`Failed to get app info for app ${appId} from the Steam Store API. Retrying in ${retryCount**2} second(s)...`);
-		await new Promise(r => setTimeout(r, (retryCount**2) * 1000));
+		console.log(`Failed to get app info for app ${appId} from the Steam Store API. Retrying in ${retryCount ** 2} second(s)...`);
+		await new Promise(r => setTimeout(r, (retryCount ** 2) * 1000));
 		return getSteamAppInfoDirect(appId, retryCount);
 	} else if (retryCount >= 3) {
 		console.log(`Failed to get app info for app ${appId} from the Steam Store API. Some info may still be available using the SteamUser API.`);
