@@ -2,10 +2,15 @@
 	"$schema": "config.schema.json",
 	"notionIntegrationKey": "<secretKey>",
 	"notionDatabaseId": "<databaseId>",
+	"notionDataSourceId": "<dataSourceIdIfMultipleDataSources>",
 	"updateInterval": 60000,
 	"steamAppIdProperty": "Steam App ID",
 	"forceReset": false,
 	"alwaysUpdate": false,
+	"steamUser": {
+		"accountName": "<steamAccountName>",
+		"password": "<steamPassword>"
+	},
 	"gameProperties": {
 		"gameName": {
 			"enabled": true,
@@ -49,6 +54,14 @@
 		"steamDeckCompatibility": {
 			"enabled": true,
 			"notionProperty": "Steam Deck Compatibility"
+		},
+		"gameDevelopers": {
+			"enabled": true,
+			"notionProperty": "Developers"
+		},
+		"gamePublishers": {
+			"enabled": true,
+			"notionProperty": "Publishers"
 		}
 	}
 }

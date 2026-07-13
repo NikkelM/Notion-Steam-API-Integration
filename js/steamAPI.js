@@ -1,42 +1,121 @@
 import SteamUser from 'steam-user';
+import { CONFIG, addRefreshTokenToLocalDatabase, getRefreshTokenFromLocalDatabase, steamUserLoginRequired } from './utils.js';
 
 // ---------- Steam API ----------
+function logOn(steamClient, config) {
+	return new Promise((resolve, reject) => {
+		const cleanup = () => {
+			steamClient.removeListener('loggedOn', onLoggedOn);
+			steamClient.removeListener('error', onError);
+		};
 
-let steamClient = new SteamUser();
-steamClient.logOn();
-await new Promise(resolve => steamClient.on('loggedOn', resolve));
+		const onLoggedOn = () => {
+			cleanup();
+			resolve();
+		};
 
-// Gets app info directly from the Steam store API
+		const onError = (err) => {
+			cleanup();
+			reject(err);
+		};
+
+		steamClient.once('loggedOn', onLoggedOn);
+		steamClient.once('error', onError);
+		steamClient.logOn(config);
+	});
+}
+
+let steamUserConfig = {};
+
+if (steamUserLoginRequired) {
+	let refreshToken = await getRefreshTokenFromLocalDatabase();
+	if (refreshToken) {
+		steamUserConfig = {
+			refreshToken: refreshToken,
+		};
+	} else
+		if (CONFIG.steamUser.accountName && CONFIG.steamUser.password) {
+			steamUserConfig = {
+				accountName: CONFIG.steamUser.accountName,
+				password: CONFIG.steamUser.password,
+			}
+		} else {
+			console.error("\"steamUser.useRefreshToken\" was provided in the config, but no refresh token found in local database. \"steamUser.accountName\" and \"steamUser.password\" are required in the config, but they were not provided!");
+			process.exit(1);
+		}
+} else {
+	steamUserConfig = {
+		anonymous: true
+	};
+}
+
+let steamClient = new SteamUser({ renewRefreshTokens: true });
+
+steamClient.on('refreshToken', async function (refreshToken) {
+	await addRefreshTokenToLocalDatabase(refreshToken);
+});
+
+console.log("Logging in to Steam", steamUserConfig.anonymous ? "anonymously..." : (steamUserConfig.accountName ? `as ${steamUserConfig.accountName}...` : "using a refresh token..."));
+
+try {
+	await logOn(steamClient, steamUserConfig);
+} catch (error) {
+	if (steamUserConfig.refreshToken) {
+		console.log("Login with refresh token failed. Removing it and trying account/password...");
+		await addRefreshTokenToLocalDatabase(null);
+
+		if (CONFIG.steamUser.accountName && CONFIG.steamUser.password) {
+			steamUserConfig = {
+				accountName: CONFIG.steamUser.accountName,
+				password: CONFIG.steamUser.password,
+			};
+			await logOn(steamClient, steamUserConfig);
+		} else {
+			console.error("No account name/password available. Provide credentials or a valid refresh token.");
+			process.exit(1);
+		}
+	} else {
+		console.error("Login to Steam failed:", error?.message || error);
+		process.exit(1);
+	}
+}
+
+// Gets app info directly from the Steam Store API
 // Does not offer all info that the SteamUser API does
 // For some apps, the API does not return any info, even though the app exists
 export async function getSteamAppInfoDirect(appId, retryCount = 0) {
-	const result = await fetch(`https://store.steampowered.com/api/appdetails/?appids=${appId}`)
-		.then(response => response.json())
-		.then(data => {
+	let result = null;
+	try {
+		const response = await fetch(`https://store.steampowered.com/api/appdetails/?appids=${appId}`);
+		// A non-OK status (e.g. a 429 rate limit) often returns an HTML body, so guard before parsing
+		if (response.ok) {
+			const data = await response.json();
 			if (data && data[appId]?.success) {
-				return data[appId].data;
+				result = data[appId].data;
 			}
-			return null;
-		});
+		}
+	} catch (error) {
+		// Network error or a non-JSON (e.g. HTML) response - fall through to the retry below
+	}
 
 	// If the request failed, we try again
 	if (!result && retryCount < 3) {
 		retryCount++;
-		console.log(`Failed to get app info for app ${appId} from the Steam store API. Retrying in ${retryCount} second(s)...`);
-		await new Promise(r => setTimeout(r, retryCount * 1000));
+		console.log(`Failed to get app info for app ${appId} from the Steam Store API. Retrying in ${retryCount ** 2} second(s)...`);
+		await new Promise(r => setTimeout(r, (retryCount ** 2) * 1000));
 		return getSteamAppInfoDirect(appId, retryCount);
 	} else if (retryCount >= 3) {
-		console.log(`Failed to get app info for app ${appId} from the Steam store API. Some info may still be available using the SteamUser API.`);
-		return {};
+		console.log(`Failed to get app info for app ${appId} from the Steam Store API. Some info may still be available using the SteamUser API.`);
+		return null;
 	}
 
 	return result;
 }
 
 // Gets app info from the SteamUser API
-// Does not offer all info that the Steam store API does
+// Does not offer all info that the Steam Store API does
 export async function getSteamAppInfoSteamUser(appIds) {
-	console.log(`\nGetting app info from SteamUser API for ${appIds.length} games...\n`);
+	console.log(`\nGetting app info from the SteamUser API for ${appIds.length} games...\n`);
 
 	return new Promise(async (resolve) => {
 		// Passing true as the third argument automatically requests access tokens, which are required for some apps
@@ -53,16 +132,20 @@ export async function getSteamAppInfoSteamUser(appIds) {
 
 // Gets the current review score data for a game from the Steam reviews API
 export async function getSteamReviewScoreDirect(appId) {
-	const result = await fetch(`https://store.steampowered.com/appreviews/${appId}?json=1&language=all`)
-	.then(response => response.json())
-	.then(data => {
+	try {
+		const response = await fetch(`https://store.steampowered.com/appreviews/${appId}?json=1&language=all`);
+		if (!response.ok) {
+			return null;
+		}
+		const data = await response.json();
 		if (data?.success) {
 			return data.query_summary;
 		}
-		return null;
-	});
+	} catch (error) {
+		// Network error or a non-JSON (e.g. HTML) response
+	}
 
-	return result;
+	return null;
 }
 
 export async function getSteamTagNames(storeTags, tagLanguage) {
@@ -77,10 +160,10 @@ export async function getSteamTagNames(storeTags, tagLanguage) {
 			const result = Object.keys(response.tags).map(function (key) {
 				return response.tags[key].name;
 			});
-	
+
 			resolve(result);
 		} catch (error) {
-			console.log("Retrieving tag names failed. The most likely cause is that the language you provided is invalid and does not yield any results from the Steam API.");
+			console.log("Retrieving tag names failed! The most likely cause is that you have not provided the \"steamUser\" property and are not authenticated, or the provided \"tagLanguage\" is invalid.");
 			resolve(["Retrieving tags failed"]);
 		}
 	});

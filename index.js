@@ -69,7 +69,7 @@ async function updateNotionDatabase() {
 
 	// Limit the number of games to avoid hitting the Steam API rate limit, if required
 	if (Object.keys(updatedPagesSteamAppIds).length > 50 && storeAPIRequired) {
-		console.log("The Steam store API limits the allowed amount of requests in quick succession. Some games will be updated later.");
+		console.log("The Steam Store API limits the allowed amount of requests in quick succession. Some games will be updated later.");
 		hitSteamAPILimit = true;
 		updatedPagesSteamAppIds = Object.fromEntries(Object.entries(updatedPagesSteamAppIds).slice(0, 50));
 	}
@@ -93,9 +93,12 @@ async function updateNotionDatabase() {
 				// Get info about the game's review score from the reviews API, if required
 				const appInfoReviews = reviewAPIRequired
 					? await getSteamReviewScoreDirect(steamAppId)
-					: null; 
+					: null;
 
-				let notionProperties = await getGameProperties(appInfoDirect, appInfoSteamUser[steamAppId], appInfoReviews, steamAppId);
+				let notionProperties = await getGameProperties(appInfoDirect, appInfoSteamUser?.[steamAppId] ?? null, appInfoReviews, steamAppId);
+				if (!notionProperties) {
+					continue;
+				}
 
 				// This is a WIP currently not continued as the Notion API supports setting date mentions, but not converting them to a reminder
 				let blockContent = [];
@@ -117,8 +120,8 @@ async function updateNotionDatabase() {
 				}
 
 				await updateNotionPage(pageId, notionProperties);
-				updateNotionBlock(pageId, blockContent)
-				addGameToLocalDatabase(pageId, steamAppId);
+				await updateNotionBlock(pageId, blockContent)
+				await addGameToLocalDatabase(pageId, steamAppId);
 
 			} catch (error) {
 				console.error(error);
@@ -134,7 +137,7 @@ async function updateNotionDatabase() {
 	}
 
 	if (hitSteamAPILimit) {
-		console.log(`Done updating Notion database. Waiting 1 minute until we can ping the Steam store API again....\n`);
+		console.log(`Done updating Notion database. Waiting 1 minute until we can ping the Steam Store API again....\n`);
 
 		// Run this method again in 1 minute
 		setTimeout(main, 60000);
