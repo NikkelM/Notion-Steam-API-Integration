@@ -38,7 +38,7 @@ export async function getGameProperties(appInfoDirect, appInfoSteamUser, appInfo
 				break;
 			case "gameIcon":
 				icon = getGameIcon(propertyValue, appInfoSteamUser);
-				if (cover) { result["icon"] = icon; }
+				if (icon) { result["icon"] = icon; }
 				break;
 			case "gamePrice":
 				outputProperties = getGamePrice(propertyValue, appInfoDirect, outputProperties);
@@ -129,8 +129,8 @@ function getGameReleaseDate(releaseDateProperty, appInfoDirect, outputProperties
 		// In cases where data is missing, we add the last day of the year or the first day of the month (as the last day of the month differs between months)
 		// We always add 00:00 UTC as the time, as the date is always given in UTC and we don't want to convert it to the local timezone
 		try {
-			// We wrap this in a try-catch block as developers can set things other than dates, such as 'To be announced', which will raise an error during conversion
-			const parsedDate = new Date(appInfoDirect.release_date.date).toISOString();
+			// Developers can set things other than dates, such as 'To be announced', which raise an error during conversion
+			new Date(appInfoDirect.release_date.date).toISOString();
 		} catch (error) {
 			return outputProperties;
 		}
@@ -169,6 +169,8 @@ function getGameReviewScore(reviewScoreProperty, appInfoReviews, outputPropertie
 
 	switch (reviewScoreProperty.format) {
 		case "percentage":
+			// Avoid division by zero for games that have no reviews yet
+			if (!appInfoReviews.total_reviews) { return outputProperties; }
 			notionReviewObject = {
 				"number": parseFloat((appInfoReviews.total_positive / appInfoReviews.total_reviews).toFixed(2))
 			};

@@ -84,14 +84,19 @@ try {
 // Does not offer all info that the SteamUser API does
 // For some apps, the API does not return any info, even though the app exists
 export async function getSteamAppInfoDirect(appId, retryCount = 0) {
-	const result = await fetch(`https://store.steampowered.com/api/appdetails/?appids=${appId}`)
-		.then(response => response.json())
-		.then(data => {
+	let result = null;
+	try {
+		const response = await fetch(`https://store.steampowered.com/api/appdetails/?appids=${appId}`);
+		// A non-OK status (e.g. a 429 rate limit) often returns an HTML body, so guard before parsing
+		if (response.ok) {
+			const data = await response.json();
 			if (data && data[appId]?.success) {
-				return data[appId].data;
+				result = data[appId].data;
 			}
-			return null;
-		});
+		}
+	} catch (error) {
+		// Network error or a non-JSON (e.g. HTML) response - fall through to the retry below
+	}
 
 	// If the request failed, we try again
 	if (!result && retryCount < 3) {
@@ -127,16 +132,20 @@ export async function getSteamAppInfoSteamUser(appIds) {
 
 // Gets the current review score data for a game from the Steam reviews API
 export async function getSteamReviewScoreDirect(appId) {
-	const result = await fetch(`https://store.steampowered.com/appreviews/${appId}?json=1&language=all`)
-		.then(response => response.json())
-		.then(data => {
-			if (data?.success) {
-				return data.query_summary;
-			}
+	try {
+		const response = await fetch(`https://store.steampowered.com/appreviews/${appId}?json=1&language=all`);
+		if (!response.ok) {
 			return null;
-		});
+		}
+		const data = await response.json();
+		if (data?.success) {
+			return data.query_summary;
+		}
+	} catch (error) {
+		// Network error or a non-JSON (e.g. HTML) response
+	}
 
-	return result;
+	return null;
 }
 
 export async function getSteamTagNames(storeTags, tagLanguage) {

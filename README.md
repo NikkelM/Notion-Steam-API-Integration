@@ -159,11 +159,17 @@ Which game properties should be fetched when a new Steam game is detected, and t
 "gameProperties": {
 	"gameName": {
 		"enabled": true,
-		"notionProperty": "Game Name",
+		"notionProperty": "Name",
 		"isPageTitle": true
 	},
-	"coverImage": true,
-	"gameIcon": true,
+	"coverImage": {
+		"enabled": true,
+		"default": "https://cdn.cloudflare.steamstatic.com/store/home/store_home_share.jpg"
+	},
+	"gameIcon": {
+		"enabled": true,
+		"default": "https://help.steampowered.com/public/shared/images/responsive/share_steam_logo.png"
+	},
 	"releaseDate": {
 		"enabled": true,
 		"notionProperty": "Release Date"
@@ -196,7 +202,7 @@ The name of the game as it appears on Steam. The database field in Notion must b
 ```json
 "gameName": {
 	"enabled": true,
-	"notionProperty": "Game Name",
+	"notionProperty": "Name",
 	"isPageTitle": true
 }
 ```
@@ -217,7 +223,7 @@ The name of the Notion property to set the game name in.
 
 | Type | Default value | Possible values | Required |
 |---|---|---|---|
-| `string` | `"Game Name"` | A valid Notion property name | Yes |
+| `string` | `"Name"` | A valid Notion property name | Yes |
 
 <h4><code>isPageTitle</code></h4>
 
@@ -434,7 +440,7 @@ The short description of the game as it appears on the store page. The database 
 ```json
 "gameDescription": {
 	"enabled": true,
-	"notionProperty": "Game Description"
+	"notionProperty": "Description"
 }
 ```
 
@@ -454,7 +460,7 @@ The name of the Notion property to set the description in.
 
 | Type | Default value | Possible values | Required |
 |---|---|---|---|
-| `string` | `"Game Description"` | A valid Notion property name | Yes |
+| `string` | `"Description"` | A valid Notion property name | Yes |
 </details>
 
 <details>
