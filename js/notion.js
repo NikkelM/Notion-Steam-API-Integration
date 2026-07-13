@@ -60,7 +60,7 @@ async function queryDatabase(cursor, lastUpdatedAt) {
 
 export function updateNotionPage(pageId, properties) {
 	// Update the game's page in the database with the new info
-	NOTION.pages.update({
+	return NOTION.pages.update({
 		page_id: pageId,
 		properties: properties.properties,
 		cover: properties.cover,

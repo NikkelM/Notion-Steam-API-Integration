@@ -95,13 +95,13 @@ async function updateNotionDatabase() {
 					? await getSteamReviewScoreDirect(steamAppId)
 					: null;
 
-				let notionProperties = await getGameProperties(appInfoDirect, appInfoSteamUser[steamAppId], appInfoReviews, steamAppId);
+				let notionProperties = await getGameProperties(appInfoDirect, appInfoSteamUser?.[steamAppId] ?? null, appInfoReviews, steamAppId);
 				if (!notionProperties) {
 					continue;
 				}
 
-				updateNotionPage(pageId, notionProperties);
-				addGameToLocalDatabase(pageId, steamAppId);
+				await updateNotionPage(pageId, notionProperties);
+				await addGameToLocalDatabase(pageId, steamAppId);
 
 			} catch (error) {
 				console.error(error);
