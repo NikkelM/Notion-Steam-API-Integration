@@ -16,26 +16,31 @@ export const reviewAPIRequired = isReviewAPIRequired();
 // Load the config file and validate it
 function getConfig() {
 	let configFileName;
-	try {
-		if (fs.existsSync('config.json')) {
-			console.log("Loading configuration file \"config.json\"...");
-			configFileName = 'config.json';
-		} else if (fs.existsSync('config.default.json')) {
-			console.log("!!! No custom configuration file found! Loading default configuration file \"config.default.json\"...");
-			configFileName = 'config.default.json';
-		}
-	} catch (error) {
-		console.error("Error loading configuration file: " + error);
+	if (fs.existsSync('config.json')) {
+		console.log("Loading configuration file \"config.json\"...");
+		configFileName = 'config.json';
+	} else if (fs.existsSync('config.default.json')) {
+		console.log("!!! No custom configuration file found! Loading default configuration file \"config.default.json\"...");
+		configFileName = 'config.default.json';
+	} else {
+		console.error("Error loading configuration file: no \"config.json\" (or \"config.default.json\") found in the current directory.");
 		process.exit(1);
 	}
 
-	const CONFIG = JSON.parse(fs.readFileSync(configFileName));
+	let CONFIG;
+	try {
+		// Strip a UTF-8 BOM (some Windows editors add one) before parsing, or JSON.parse would throw
+		CONFIG = JSON.parse(fs.readFileSync(configFileName, 'utf8').replace(/^\uFEFF/, ''));
+	} catch (error) {
+		console.error(`Error parsing configuration file "${configFileName}" as JSON: ${error.message ?? error}`);
+		process.exit(1);
+	}
 
 	// Validate the config file
 	console.log("Validating configuration file...\n");
 	try {
 		const validator = new jsonschema.Validator();
-		validator.validate(CONFIG, JSON.parse(fs.readFileSync('config.schema.json')), { throwError: true });
+		validator.validate(CONFIG, JSON.parse(fs.readFileSync('config.schema.json', 'utf8').replace(/^\uFEFF/, '')), { throwError: true });
 	} catch (error) {
 		console.error("Error validating configuration file: " + error);
 		process.exit(1);

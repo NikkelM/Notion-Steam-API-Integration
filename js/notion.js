@@ -3,10 +3,10 @@ import { CONFIG, localDatabase } from './utils.js';
 
 // ---------- Notion API ----------
 
-const NOTION = new Client({ auth: CONFIG.notionIntegrationKey });
-const DATABASE_ID = CONFIG.notionDatabaseId;
+const NOTION = new Client({ auth: CONFIG.notionIntegrationKey?.trim() });
+const DATABASE_ID = CONFIG.notionDatabaseId?.trim();
 // Will be set to the only available data source if none is provided in the config and only one exists in the database
-let DATASOURCE_ID = CONFIG.notionDataSourceId || null;
+let DATASOURCE_ID = CONFIG.notionDataSourceId?.trim() || null;
 
 // Get a list of games in the Notion database that have the `Steam App ID` field set and were last edited after our last check. 
 export async function getGamesFromNotionDatabase() {

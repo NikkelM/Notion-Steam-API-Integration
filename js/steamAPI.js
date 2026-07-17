@@ -36,7 +36,7 @@ if (steamUserLoginRequired) {
 	} else
 		if (CONFIG.steamUser.accountName && CONFIG.steamUser.password) {
 			steamUserConfig = {
-				accountName: CONFIG.steamUser.accountName,
+				accountName: CONFIG.steamUser.accountName?.trim(),
 				password: CONFIG.steamUser.password,
 			}
 		} else {
@@ -66,7 +66,7 @@ try {
 
 		if (CONFIG.steamUser.accountName && CONFIG.steamUser.password) {
 			steamUserConfig = {
-				accountName: CONFIG.steamUser.accountName,
+				accountName: CONFIG.steamUser.accountName?.trim(),
 				password: CONFIG.steamUser.password,
 			};
 			await logOn(steamClient, steamUserConfig);

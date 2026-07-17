@@ -12,9 +12,19 @@ import { getGameProperties } from './js/gameProperties.js';
 // ---------- Setup ----------
 
 // We need to do this here because of circular imports
-await checkNotionPropertiesExistence();
-
-await setUserIdInDatabaseIfNotSet();
+try {
+	await checkNotionPropertiesExistence();
+	await setUserIdInDatabaseIfNotSet();
+} catch (error) {
+	if (error?.code === 'unauthorized') {
+		console.error("\nError: Your Notion integration key is invalid. Check \"notionIntegrationKey\" in your config.json (create or find it at https://www.notion.so/my-integrations).");
+	} else if (error?.code === 'object_not_found') {
+		console.error("\nError: The Notion database was not found, or your integration has not been granted access to it. Check \"notionDatabaseId\" and share the database with your integration.");
+	} else {
+		console.error("\nError connecting to Notion: " + (error?.message ?? error));
+	}
+	process.exit(1);
+}
 
 const updateInterval = CONFIG.updateInterval;
 
