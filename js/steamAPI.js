@@ -1,84 +1,85 @@
 import SteamUser from 'steam-user';
-import { CONFIG, addRefreshTokenToLocalDatabase, getRefreshTokenFromLocalDatabase, steamUserLoginRequired } from './utils.js';
+import { CONFIG, addRefreshTokenToLocalDatabase, getRefreshTokenFromLocalDatabase, resolveSecret, steamUserLoginRequired } from './utils.js';
 
-// ---------- Steam API ----------
-function logOn(steamClient, config) {
+// ---------- Steam login ----------
+
+// The Steam client, created and logged in once by loginToSteam() before any product/tag lookups
+let steamClient = null;
+
+function logOn(client, config) {
 	return new Promise((resolve, reject) => {
 		const cleanup = () => {
-			steamClient.removeListener('loggedOn', onLoggedOn);
-			steamClient.removeListener('error', onError);
+			client.removeListener('loggedOn', onLoggedOn);
+			client.removeListener('error', onError);
 		};
-
-		const onLoggedOn = () => {
-			cleanup();
-			resolve();
-		};
-
-		const onError = (err) => {
-			cleanup();
-			reject(err);
-		};
-
-		steamClient.once('loggedOn', onLoggedOn);
-		steamClient.once('error', onError);
-		steamClient.logOn(config);
+		const onLoggedOn = () => { cleanup(); resolve(); };
+		const onError = (err) => { cleanup(); reject(err); };
+		client.once('loggedOn', onLoggedOn);
+		client.once('error', onError);
+		client.logOn(config);
 	});
 }
 
-let steamUserConfig = {};
-
-if (steamUserLoginRequired) {
-	let refreshToken = await getRefreshTokenFromLocalDatabase();
-	if (refreshToken) {
-		steamUserConfig = {
-			refreshToken: refreshToken,
-		};
-	} else
-		if (CONFIG.steamUser.accountName && CONFIG.steamUser.password) {
-			steamUserConfig = {
-				accountName: CONFIG.steamUser.accountName?.trim(),
-				password: CONFIG.steamUser.password,
-			}
-		} else {
-			console.error("\"steamUser.useRefreshToken\" was provided in the config, but no refresh token found in local database. \"steamUser.accountName\" and \"steamUser.password\" are required in the config, but they were not provided!");
-			process.exit(1);
-		}
-} else {
-	steamUserConfig = {
-		anonymous: true
-	};
+// Resolve the Steam password from the STEAM_PASSWORD environment variable or an interactive prompt
+function resolveSteamPassword(accountName) {
+	return resolveSecret({
+		envVar: 'STEAM_PASSWORD',
+		promptMessage: `Steam password for "${accountName}":`,
+		label: 'Steam password'
+	});
 }
 
-let steamClient = new SteamUser({ renewRefreshTokens: true });
-
-steamClient.on('refreshToken', async function (refreshToken) {
-	await addRefreshTokenToLocalDatabase(refreshToken);
-});
-
-console.log("Logging in to Steam", steamUserConfig.anonymous ? "anonymously..." : (steamUserConfig.accountName ? `as ${steamUserConfig.accountName}...` : "using a refresh token..."));
-
-try {
-	await logOn(steamClient, steamUserConfig);
-} catch (error) {
-	if (steamUserConfig.refreshToken) {
-		console.log("Login with refresh token failed. Removing it and trying account/password...");
-		await addRefreshTokenToLocalDatabase(null);
-
-		if (CONFIG.steamUser.accountName && CONFIG.steamUser.password) {
-			steamUserConfig = {
-				accountName: CONFIG.steamUser.accountName?.trim(),
-				password: CONFIG.steamUser.password,
-			};
-			await logOn(steamClient, steamUserConfig);
+// Log in to Steam: anonymously when only public data is needed, or with the account when tag data is required
+// Uses a stored refresh token when available, falling back to account name + password (STEAM_PASSWORD)
+export async function loginToSteam() {
+	let steamUserConfig;
+	if (steamUserLoginRequired()) {
+		const refreshToken = await getRefreshTokenFromLocalDatabase();
+		if (refreshToken) {
+			steamUserConfig = { refreshToken };
 		} else {
-			console.error("No account name/password available. Provide credentials or a valid refresh token.");
-			process.exit(1);
+			const accountName = CONFIG.steamUser?.accountName?.trim();
+			if (!accountName) {
+				console.error("Fetching tags requires a Steam login. Provide \"steamUser.accountName\" in your config and your password via the STEAM_PASSWORD environment variable, or disable the \"tags\" property.");
+				process.exit(1);
+			}
+			steamUserConfig = { accountName, password: await resolveSteamPassword(accountName) };
 		}
 	} else {
-		console.error("Login to Steam failed:", error?.message || error);
-		process.exit(1);
+		steamUserConfig = { anonymous: true };
+	}
+
+	steamClient = new SteamUser({ renewRefreshTokens: true });
+	steamClient.on('refreshToken', async function (refreshToken) {
+		await addRefreshTokenToLocalDatabase(refreshToken);
+	});
+
+	console.log("Logging in to Steam", steamUserConfig.anonymous ? "anonymously..." : (steamUserConfig.accountName ? `as ${steamUserConfig.accountName}...` : "using a refresh token..."));
+
+	try {
+		await logOn(steamClient, steamUserConfig);
+	} catch (error) {
+		// A stored refresh token can be stale (e.g. the password was changed); drop it and fall back to account/password
+		if (steamUserConfig.refreshToken) {
+			console.log("Login with refresh token failed. Removing it and trying account/password...");
+			await addRefreshTokenToLocalDatabase(null);
+
+			const accountName = CONFIG.steamUser?.accountName?.trim();
+			if (accountName) {
+				steamUserConfig = { accountName, password: await resolveSteamPassword(accountName) };
+				await logOn(steamClient, steamUserConfig);
+			} else {
+				console.error("The stored refresh token is no longer valid. Provide \"steamUser.accountName\" and the STEAM_PASSWORD environment variable to log in again.");
+				process.exit(1);
+			}
+		} else {
+			console.error("Login to Steam failed:", error?.message || error);
+			process.exit(1);
+		}
 	}
 }
+
+// ---------- Steam API ----------
 
 // Gets app info directly from the Steam Store API
 // Does not offer all info that the SteamUser API does
@@ -117,17 +118,15 @@ export async function getSteamAppInfoDirect(appId, retryCount = 0) {
 export async function getSteamAppInfoSteamUser(appIds) {
 	console.log(`\nGetting app info from the SteamUser API for ${appIds.length} games...\n`);
 
-	return new Promise(async (resolve) => {
-		// Passing true as the third argument automatically requests access tokens, which are required for some apps
-		let response = await steamClient.getProductInfo(appIds, [], true);
+	// Passing true as the third argument automatically requests access tokens, which are required for some apps
+	const response = await steamClient.getProductInfo(appIds, [], true);
 
-		let result = {};
-		for (const key of Object.keys(response.apps)) {
-			result[key] = response.apps[key].appinfo.common;
-		}
+	let result = {};
+	for (const key of Object.keys(response.apps)) {
+		result[key] = response.apps[key].appinfo.common;
+	}
 
-		resolve(result);
-	});
+	return result;
 }
 
 // Gets the current review score data for a game from the Steam reviews API
@@ -153,18 +152,13 @@ export async function getSteamTagNames(storeTags, tagLanguage) {
 		return storeTags[key];
 	});
 
-	return new Promise(async (resolve) => {
-		try {
-			const response = await steamClient.getStoreTagNames(tagLanguage, tagIds);
-
-			const result = Object.keys(response.tags).map(function (key) {
-				return response.tags[key].name;
-			});
-
-			resolve(result);
-		} catch (error) {
-			console.log("Retrieving tag names failed! The most likely cause is that you have not provided the \"steamUser\" property and are not authenticated, or the provided \"tagLanguage\" is invalid.");
-			resolve(["Retrieving tags failed"]);
-		}
-	});
+	try {
+		const response = await steamClient.getStoreTagNames(tagLanguage, tagIds);
+		return Object.keys(response.tags).map(function (key) {
+			return response.tags[key].name;
+		});
+	} catch (error) {
+		console.log("Retrieving tag names failed! The most likely cause is that you have not provided the \"steamUser\" property and are not authenticated, or the provided \"tagLanguage\" is invalid.");
+		return ["Retrieving tags failed"];
+	}
 }

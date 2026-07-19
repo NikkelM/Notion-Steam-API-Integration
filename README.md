@@ -2,39 +2,126 @@
 
 ![Notion Steam API Integration banner](images/NotionSteamAPIIntegrationBanner.png)
 
+[![npm version](https://img.shields.io/npm/v/notion-steam-api-integration)](https://www.npmjs.com/package/notion-steam-api-integration)
+[![Tests](https://github.com/NikkelM/Notion-Steam-API-Integration/actions/workflows/test.yml/badge.svg)](https://github.com/NikkelM/Notion-Steam-API-Integration/actions/workflows/test.yml)
+<!-- [![npm downloads](https://img.shields.io/npm/dt/notion-steam-api-integration)](https://www.npmjs.com/package/notion-steam-api-integration) -->
+
 Notion integration for automatically updating database entries containing a `Steam App ID` with data from the Steam API.
 
-## Setup
+## Table of contents
 
-Run `npm install` to install the required dependencies first.
+- [Installation](#installation)
+- [Notion setup](#notion-setup)
+- [Usage](#usage)
+- [Security](#security)
+- [Configuration](#configuration)
+- [Related projects](#related-projects)
+- [Feedback](#feedback)
 
-Following this, create a `config.json` file in the root directory of the project and fill it with your desired [configuration](#configuration).
+## Installation
 
-If you haven't already done so, you can obtain a Notion integration key by creating an (internal) Notion integration for your workspace.
+Install it globally from npm to get the `notion-steam-api-integration` command:
+
+```bash
+npm install -g notion-steam-api-integration
+```
+
+Or run it on demand without installing, using `npx`:
+
+```bash
+npx notion-steam-api-integration
+```
+
+You need [Node.js](https://nodejs.org) 22.13 or newer.
+
+## Notion setup
+
+Create an (internal) Notion integration for your workspace to obtain an integration key.
 You can follow [this guide](https://developers.notion.com/docs/create-a-notion-integration) to learn how to do so.
-You will need this key to run the integration locally.
 
 **IMPORTANT: Don't forget to connect the integration to your database, as described in the guide! Otherwise, the integration won't work.**
 
+Provide the integration key via the `NOTION_INTEGRATION_KEY` environment variable (see [Security](#security)).
+
 ## Usage
 
-After providing the `config.json` [configuration](#configuration) file, you can run the script using
+There are three ways to configure and run the integration.
+
+1. **Command-line flags** - the quickest way, using the game properties' defaults. For example:
+   ```bash
+   notion-steam-api-integration --database-id <yourNotionDatabaseId>
+   ```
+   Add `--save-config` to also write the assembled configuration to a `config.json` (or `--save-config <path>`) for reuse.
+2. **The interactive wizard** - `notion-steam-api-integration init` asks you a few questions and writes a `config.json`. Running `notion-steam-api-integration` with no arguments and no `config.json` present starts this wizard automatically.
+3. **A configuration file** - `notion-steam-api-integration` (or `notion-steam-api-integration run`) runs a `config.json` from the current directory (or pass `--config <path>`). The wizard can create the file for you, or you can write it by hand following the [configuration](#configuration) reference.
+
+Once running, the integration watches the database for entries whose `Steam App ID` property (the name is configurable) is set, fetches the corresponding data from the Steam API, and fills in the configured properties.
+It keeps running and re-checks the database every `updateInterval` milliseconds, so you can leave it running in the background while you edit the database.
+Entries without a `Steam App ID` set are ignored.
+
+A small local database remembers which entries have already been processed (and caches the Steam refresh token). By default it is stored in an OS-native per-user data directory (Windows `%LOCALAPPDATA%`, macOS `~/Library/Application Support`, Linux `$XDG_DATA_HOME` or `~/.local/share`), under a `notion-steam-api-integration/db` folder, so it is stable no matter where you run the integration from. Set `databasePath` in the config (or pass `--db-path <path>`) to store it somewhere else; the resolved location is printed on startup.
+If you change the configuration to include new game properties, run once with `--force-reset` (or `"forceReset": true` in the config) to also set the new values for all previously discovered games.
+
+List every command and its flags with:
 
 ```bash
-node index.js
+notion-steam-api-integration --help
+notion-steam-api-integration run --help
 ```
 
-The integration will search the database for new entries that have the `Steam App ID` field (the name of this property must be defined in the configuration file) set to a value other than `null` and then fetch the corresponding data from the Steam API.
-Following this, the database entry will be updated with cleaned up data from the API, such as Steam user review scores or the game's tags, following the provided configuration.
+### Command-line flags
 
-You are able to have the integration running in the background whilst editing the database.
-You can also have database entries without the `Steam App ID` field set, these will be ignored by the integration.
+Flags let you run the integration without a `config.json`, using the default set of game properties (fetching tags is enabled only when you pass `--steam-account-name`).
+For finer control over which properties are fetched, use the wizard or a config file.
 
-If you change the configuration to include new game properties, you will need to run the integration with the `forceReset` flag set to `true` in the configuration, in order to also set the new value for all previously discovered games.
+| Flag | Config key | Description |
+| --- | --- | --- |
+| `-c, --config <path>` | - | Path to a `config.json`. Defaults to `./config.json`. |
+| `--database-id <id>` | `notionDatabaseId` | Notion database ID. Providing it enables flag-driven mode (no `config.json` needed). |
+| `--data-source-id <id>` | `notionDataSourceId` | Notion data source ID. Only needed for databases with multiple data sources. |
+| `--interval <ms>` | `updateInterval` | How often to check the database for changes, in milliseconds (minimum 60000). |
+| `--app-id-property <name>` | `steamAppIdProperty` | Name of the Notion property that holds the Steam App ID. Default `Steam App ID`. |
+| `--steam-account-name <name>` | `steamUser.accountName` | Steam account name, enabling tag fetching (password via the `STEAM_PASSWORD` env var). |
+| `--force-reset` | `forceReset` | Reset the local database and refresh every game on start. |
+| `--always-update` | `alwaysUpdate` | Also re-update existing entries edited by someone other than the integration. |
+| `--db-path <path>` | `databasePath` | Where to store the local database. Default: the OS-native per-user data directory. |
+| `--save-config [path]` | - | Also write the assembled configuration to a file for reuse. Default `config.json`. |
 
-There currently is no way to reset a value that was previously set in the Notion database.
+The Notion integration key (`NOTION_INTEGRATION_KEY`) and the Steam password (`STEAM_PASSWORD`) are read from the environment (see [Security](#security)).
+Nested game-property options are only available via the wizard or a config file.
+The `init` command also accepts `-o, --output <path>` to write the configuration file somewhere other than `config.json`.
+
+## Security
+
+The integration handles two secrets:
+
+- **Your Notion integration key** is read from the `NOTION_INTEGRATION_KEY` environment variable, or you are prompted for it interactively when the integration starts.
+- **Your Steam password** (only needed to fetch tags on the first login) is read from the `STEAM_PASSWORD` environment variable, or you are prompted for it interactively.
 
 ## Configuration
+
+### Notion database columns
+
+Before running the integration, create the columns it fills in (or let it tell you: on the first run it checks that every configured column exists and exits with the name of any that are missing).
+The names below are the defaults - rename them in your `config.json`, or disable the properties you do not want.
+Print this list any time with `notion-steam-api-integration properties`.
+
+| Property | Default column name | Notion column type |
+|---|---|---|
+| `gameName` | Name | Title (or Text if `isPageTitle` is `false`) |
+| `coverImage` | *(page cover)* | none - sets the page cover image |
+| `gameIcon` | *(page icon)* | none - sets the page icon |
+| `releaseDate` | Release Date | Date |
+| `reviewScore` | Review Score | Number (Select for the `sentiment` format, Text for `positive/negative`) |
+| `tags` | Tags | Multi-select (requires a Steam login) |
+| `gameDescription` | Description | Text |
+| `storePage` | Store Page | URL |
+| `gamePrice` | Price | Number |
+| `steamDeckCompatibility` | Steam Deck Compatibility | Select |
+| `gameDevelopers` | Developers | Multi-select |
+| `gamePublishers` | Publishers | Multi-select |
+
+You also need the column the integration watches for Steam App IDs: **Steam App ID** (Number). Set `steamAppIdProperty` to match its name.
 
 ### Schema validation
 
@@ -49,12 +136,12 @@ The schema can be found in the `config.schema.json` file and used within your `c
 *NOTE: The script will test your provided `config.json` against this schema, so make sure your configuration is valid.*
 
 Note that *only if* you want to fetch tag data, Steam requires you to be authenticated with your Steam account.
-For this, provide your Steam account name and password in the `steamUser` property of the configuration file.
+For this, provide your Steam account name in the `steamUser.accountName` property of the configuration file and your password via the `STEAM_PASSWORD` environment variable (see [Security](#security)).
 The integration does not transmit this data over the internet, everything is done locally.
 If you have Steam Guard enabled, you will also need to provide the Steam Guard code when running the integration.
 
 Once you have authenticated once, the integration will store a local refresh token for ~200 days before you need to log in again.
-You can then replace the `accountName` and `password` with the `useRefreshToken` property set to `true`, which will make the integration use the stored refresh token to authenticate you to the Steam API.
+You can then set the `useRefreshToken` property to `true`, which will make the integration use the stored refresh token to authenticate you to the Steam API without needing your password again.
 
 ### Properties
 
@@ -65,11 +152,12 @@ The following is a list of all configuration items, their defaults and the value
 <details>
 <summary><code>notionIntegrationKey</code></summary>
 
-The secret integration key for your Notion integration. Find it on your integration dashboard after creating a new integration on https://www.notion.so/my-integrations.
+The secret integration key for your Notion integration (create or find it at https://www.notion.so/my-integrations).
+**Provide this via the `NOTION_INTEGRATION_KEY` environment variable** (see [Security](#security)), storing it in the configuration file is no longer allowed, and the integration will refuse to run if it is set.
 
 | Type | Default value | Possible values | Required |
 |---|---|---|---|
-| `string` | `""` | A valid Notion integration key | Yes |
+| environment variable | - | A valid Notion integration key | Yes, via `NOTION_INTEGRATION_KEY` |
 </details>
 
 <details>
@@ -137,13 +225,14 @@ If true, the integration will always update entries in the Notion database that 
 <details>
 <summary><code>steamUser</code></summary>
 
-Login details to authenticate to your Steam account. This is required to be able to fetch tag data. If you have Steam Guard enabled, you will need to provide the Steam Guard code when running the app. Once logged in, the integration will store a local refresh token for ~200 days before you need to log in again. The integration does not transmit any of your login details anywhere, they are used internally to authenticate yourself to the Steam API. If you do not want to fetch tag data, you do not need to provide this property!
+Steam login details, only required to fetch tag data. Provide your account name here and your password via the `STEAM_PASSWORD` environment variable (see [Security](#security)), storing the password in the configuration file is no longer allowed. If you have Steam Guard enabled, you will be prompted for the code when the integration runs. Once logged in, the integration stores a local refresh token for ~200 days before you need to log in again. It does not store your password. If you do not fetch tag data, you do not need this property!
 
-| Type | Default value | Possible values | Required |
+| Property | Default value | Possible values | Required |
 |---|---|---|---|
-| `useRefreshToken` | `true` | `true` only | Yes, if you want to use an already stored refresh token. This requires a previous login using `accountName` and `password`. |
-| `accountName` | `<steamAccountName>` | Your Steam account name | Yes, if you do not already have a stored refresh token and set `useRefreshToken` to `true`. |
-| `password` | `<steamAccountPassword>` | Your Steam account password | Yes, if you do not already have a stored refresh token and set `useRefreshToken` to `true`. |
+| `accountName` | `<steamAccountName>` | Your Steam account name | Yes, to fetch tags, unless a valid refresh token is already stored. |
+| `useRefreshToken` | `false` | `true` or `false` | No. Set to `true` to reuse a stored refresh token from a previous login without providing your password again. |
+
+Your Steam password is **not** part of this property, provide it via the `STEAM_PASSWORD` environment variable when logging in for the first time.
 </details>
 
 <details>

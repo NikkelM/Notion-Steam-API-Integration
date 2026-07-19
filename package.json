@@ -1,11 +1,55 @@
 {
 	"name": "notion-steam-api-integration",
 	"type": "module",
-	"version": "1.9.3",
-	"description": "Notion integration to fetch data from the Steam API and populate a database given Steam App IDs.",
+	"version": "2.0.0",
+	"description": "Notion integration that watches a database for Steam App IDs and fills in game data (name, cover, tags, reviews, price and more) from the Steam API.",
+	"keywords": [
+		"notion",
+		"steam",
+		"steam-api",
+		"notion-api",
+		"notion-database",
+		"notion-integration",
+		"steam-app-id"
+	],
+	"author": {
+		"name": "Nikkel Mollenhauer",
+		"email": "contact@nikkelm.dev"
+	},
+	"license": "GPL-3.0-or-later",
+	"homepage": "https://github.com/NikkelM/Notion-Steam-API-Integration#readme",
 	"main": "index.js",
+	"bin": {
+		"notion-steam-api-integration": "bin/cli.js"
+	},
+	"files": [
+		"bin/",
+		"index.js",
+		"js/",
+		"config.schema.json",
+		"config.default.json"
+	],
+	"engines": {
+		"node": ">=22.13.0"
+	},
+	"scripts": {
+		"test": "node --test --experimental-test-module-mocks"
+	},
+	"funding": [
+		"https://github.com/sponsors/NikkelM",
+		"https://ko-fi.com/nikkelm"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/NikkelM/Notion-Steam-API-Integration.git"
+	},
+	"bugs": {
+		"url": "https://github.com/NikkelM/Notion-Steam-API-Integration/issues"
+	},
 	"dependencies": {
+		"@inquirer/prompts": "^8.5.2",
 		"@notionhq/client": "^5.0.0",
+		"commander": "^15.0.0",
 		"jsonschema": "^1.4.1",
 		"level": "^8.0.0",
 		"steam-user": "^5.2.2"
