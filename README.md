@@ -98,6 +98,9 @@ The integration handles two secrets:
 - **Your Notion integration key** is read from the `NOTION_INTEGRATION_KEY` environment variable, or you are prompted for it interactively when the integration starts.
 - **Your Steam password** (only needed to fetch tags on the first login) is read from the `STEAM_PASSWORD` environment variable, or you are prompted for it interactively.
 
+To avoid being prompted each time, set these as persistent environment variables: on Windows `setx NOTION_INTEGRATION_KEY "secret_xxx"` (and `setx STEAM_PASSWORD "..."`), then open a new terminal.
+On macOS/Linux add the equivalent `export` lines to your shell profile.
+
 ## Configuration
 
 ### Notion database columns
