@@ -146,6 +146,29 @@ export function describeGameProperties() {
 	return lines.join('\n');
 }
 
+// ---------- Update selection ----------
+
+// Decide which changed Notion pages still need updating, given what is already stored locally
+// storedAppIdByPage maps pageId -> the Steam App ID last stored for it (null/undefined if never processed)
+// The check is per page (not by App-ID membership), so two different pages that share an App ID are handled independently
+export function pagesToUpdate({ steamAppIdByPage, editedByByPage, storedAppIdByPage, alwaysUpdate, integrationUserId }) {
+	const appIds = { ...steamAppIdByPage };
+	const editedBy = { ...editedByByPage };
+	for (const pageId of Object.keys(appIds)) {
+		// This exact page has already been processed with its current App ID
+		const alreadyProcessed = storedAppIdByPage[pageId] === appIds[pageId];
+		// In alwaysUpdate mode we only skip pages the integration itself last edited (so other users' edits are always re-applied)
+		const skip = alwaysUpdate
+			? (editedBy[pageId] === integrationUserId && alreadyProcessed)
+			: alreadyProcessed;
+		if (skip) {
+			delete appIds[pageId];
+			delete editedBy[pageId];
+		}
+	}
+	return { appIds, editedBy };
+}
+
 // ---------- Notion IDs ----------
 
 // A Notion database or data source ID is a UUID: 32 hex characters, or the 8-4-4-4-12 dashed form
@@ -163,7 +186,7 @@ export function envVarInstructions(envVar, value = '<value>') {
 		`  Permanently (recommended; then open a new terminal):`,
 		`    PowerShell:  setx ${envVar} "${value}"`,
 		`    bash/zsh:    echo 'export ${envVar}="${value}"' >> ~/.profile`,
-		`  For the current session only:`,
+		`  For the current terminal only:`,
 		`    PowerShell:  $env:${envVar} = '${value}'`,
 		`    bash/zsh:    export ${envVar}='${value}'`
 	].join('\n');
@@ -235,7 +258,12 @@ export async function openLocalDatabase() {
 		console.log("Resetting local database in 10 seconds. Kill the process to cancel (using Ctrl+C on Windows or Cmd+C on Mac).");
 		await new Promise(resolve => setTimeout(resolve, 10000));
 		console.log("Resetting local database...\n");
-		await db.clear();
+		try {
+			await db.clear();
+		} catch (error) {
+			console.error(`Could not reset the database: ${error.message}. Perhaps another instance of the integration is already running?`);
+			process.exit(1);
+		}
 	}
 
 	// Initialize the lastUpdatedAt property if it doesn't exist

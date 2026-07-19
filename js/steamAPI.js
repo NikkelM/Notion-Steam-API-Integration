@@ -34,7 +34,9 @@ function resolveSteamPassword(accountName) {
 export async function loginToSteam() {
 	let steamUserConfig;
 	if (steamUserLoginRequired()) {
-		const refreshToken = await getRefreshTokenFromLocalDatabase();
+		// Reuse a stored refresh token unless the user explicitly set useRefreshToken: false (e.g. to force a fresh login after a password change)
+		const useStoredToken = CONFIG.steamUser?.useRefreshToken !== false;
+		const refreshToken = useStoredToken ? await getRefreshTokenFromLocalDatabase() : null;
 		if (refreshToken) {
 			steamUserConfig = { refreshToken };
 		} else {
@@ -51,7 +53,11 @@ export async function loginToSteam() {
 
 	steamClient = new SteamUser({ renewRefreshTokens: true });
 	steamClient.on('refreshToken', async function (refreshToken) {
-		await addRefreshTokenToLocalDatabase(refreshToken);
+		try {
+			await addRefreshTokenToLocalDatabase(refreshToken);
+		} catch (error) {
+			console.error("Could not store the Steam refresh token:", error?.message ?? error);
+		}
 	});
 
 	console.log("Logging in to Steam", steamUserConfig.anonymous ? "anonymously..." : (steamUserConfig.accountName ? `as ${steamUserConfig.accountName}...` : "using a refresh token..."));
@@ -123,7 +129,11 @@ export async function getSteamAppInfoSteamUser(appIds) {
 
 	let result = {};
 	for (const key of Object.keys(response.apps)) {
-		result[key] = response.apps[key].appinfo.common;
+		// Some app types (DLC, tools) have no appinfo.common; skip them rather than crashing the whole update cycle
+		const common = response.apps[key]?.appinfo?.common;
+		if (common) {
+			result[key] = common;
+		}
 	}
 
 	return result;

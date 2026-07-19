@@ -233,7 +233,7 @@ Steam login details, only required to fetch tag data. Provide your account name 
 | Property | Default value | Possible values | Required |
 |---|---|---|---|
 | `accountName` | `<steamAccountName>` | Your Steam account name | Yes, to fetch tags, unless a valid refresh token is already stored. |
-| `useRefreshToken` | `false` | `true` or `false` | No. Set to `true` to reuse a stored refresh token from a previous login without providing your password again. |
+| `useRefreshToken` | `false` | `true` or `false` | No. When `true` or omitted, a stored refresh token from a previous login is reused when available (no password needed). Set to `false` to force a fresh login with your account name and password. |
 
 Your Steam password is **not** part of this property, provide it via the `STEAM_PASSWORD` environment variable when logging in for the first time.
 </details>
@@ -478,7 +478,7 @@ The name of the Notion property to set the user review score in.
 <details>
 <summary><code>tags</code></summary>
 
-Requires Steam login! Provide accountName and password in the top-level `steamUser` property! The user-defined tags of the game as they can be seen on the store page. The database field in Notion must be of type `Multi-select`.
+Requires Steam login! Provide your `accountName` in the top-level `steamUser` property and your password via the `STEAM_PASSWORD` environment variable (see [Security](#security)). Storing the password in `config.json` is no longer allowed. The user-defined tags of the game as they can be seen on the store page. The database field in Notion must be of type `Multi-select`.
 
 | Type | Default value | Possible values | Required |
 |---|---|---|---|

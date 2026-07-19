@@ -62,7 +62,7 @@
 			"additionalProperties": false,
 			"properties": {
 				"useRefreshToken": {
-					"description": "If true, the integration will try to use the refresh token stored in the local database to authenticate to your Steam account. You can only set this to \"true\" if you have previously logged in using \"accountName\" and your password, and the refresh token is still valid.",
+					"description": "When true or omitted, the integration reuses a refresh token stored in the local database from a previous login, so you do not need to provide your password again. Set to false to force a fresh login with your accountName and password.",
 					"type": "boolean",
 					"default": false
 				},

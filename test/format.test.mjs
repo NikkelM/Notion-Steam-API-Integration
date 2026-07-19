@@ -16,6 +16,52 @@ import {
 	getGameCoverImage,
 	getGameIcon
 } from '../js/gameProperties.js';
+import { pagesToUpdate } from '../js/utils.js';
+
+describe('pagesToUpdate', () => {
+	it('skips a page already stored with its current App ID', () => {
+		const { appIds } = pagesToUpdate({
+			steamAppIdByPage: { pageA: 400, pageB: 620 },
+			editedByByPage: { pageA: 'u', pageB: 'u' },
+			storedAppIdByPage: { pageA: 400, pageB: null },
+			alwaysUpdate: false
+		});
+		assert.deepEqual(appIds, { pageB: 620 }, 'the already-processed pageA is removed, the new pageB kept');
+	});
+
+	it('does NOT skip a different page that merely shares an App ID with an already-stored page', () => {
+		// The core regression: pageA(400) is stored; pageB also references 400 but is a new page and must still be processed
+		const { appIds } = pagesToUpdate({
+			steamAppIdByPage: { pageA: 400, pageB: 400 },
+			editedByByPage: { pageA: 'u', pageB: 'u' },
+			storedAppIdByPage: { pageA: 400, pageB: null },
+			alwaysUpdate: false
+		});
+		assert.deepEqual(appIds, { pageB: 400 }, 'pageB (same App ID, different page) must not be dropped');
+	});
+
+	it('re-processes a page whose App ID changed', () => {
+		const { appIds } = pagesToUpdate({
+			steamAppIdByPage: { pageA: 999 },
+			editedByByPage: { pageA: 'u' },
+			storedAppIdByPage: { pageA: 400 },
+			alwaysUpdate: false
+		});
+		assert.deepEqual(appIds, { pageA: 999 }, 'a changed App ID means the page is re-processed');
+	});
+
+	it('in alwaysUpdate mode only skips already-stored pages the integration itself last edited', () => {
+		const { appIds } = pagesToUpdate({
+			steamAppIdByPage: { own: 400, other: 620, newOwn: 700 },
+			editedByByPage: { own: 'integration', other: 'someoneElse', newOwn: 'integration' },
+			storedAppIdByPage: { own: 400, other: 620, newOwn: null },
+			alwaysUpdate: true,
+			integrationUserId: 'integration'
+		});
+		// "own" is skipped (integration-edited + stored); "other" kept (someone else edited); "newOwn" kept (not yet stored)
+		assert.deepEqual(appIds, { other: 620, newOwn: 700 });
+	});
+});
 
 describe('getGameNameProperty', () => {
 	const prop = { enabled: true, notionProperty: 'Name', isPageTitle: true };
