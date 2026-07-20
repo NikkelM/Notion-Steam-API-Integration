@@ -1,21 +1,31 @@
-import { Client } from '@notionhq/client';
+import { Client, LogLevel } from '@notionhq/client';
 import { CONFIG, localDatabase } from './utils.js';
 
 // ---------- Notion API ----------
 
-const NOTION = new Client({ auth: CONFIG.notionIntegrationKey });
-const DATABASE_ID = CONFIG.notionDatabaseId;
-// Will be set to the only available data source if none is provided in the config and only one exists in the database
-let DATASOURCE_ID = CONFIG.notionDataSourceId || null;
+// The Notion client is created lazily so importing this module does not require a resolved integration key
+let _notion;
+function notion() {
+	if (!_notion) {
+		_notion = new Client({
+			auth: CONFIG.notionIntegrationKey?.trim(),
+			logLevel: LogLevel.ERROR
+		});
+	}
+	return _notion;
+}
 
-// Get a list of games in the Notion database that have the `Steam App ID` field set and were last edited after our last check. 
+// Set to the configured data source, or discovered in checkNotionPropertiesExistence if only one exists
+let DATASOURCE_ID = null;
+
+// Get a list of games in the Notion database that have the `Steam App ID` field set and were last edited after our last check.
 export async function getGamesFromNotionDatabase() {
 	const appIds = {};
 	const lastEditedBy = {};
 	const lastUpdatedAt = await localDatabase.get('lastUpdatedAt');
 
 	async function getPageOfGames(cursor) {
-		// While there are more pages left in the query, get pages from the database. 
+		// While there are more pages left in the query, get pages from the database.
 		const currentPages = await queryDatabase(cursor, lastUpdatedAt);
 
 		currentPages.results.forEach(page => {
@@ -35,7 +45,7 @@ export async function getGamesFromNotionDatabase() {
 
 // Fetch all pages from the database that have been edited since we last accessed the database, and that have a Steam App ID set
 async function queryDatabase(cursor, lastUpdatedAt) {
-	return await NOTION.dataSources.query({
+	return await notion().dataSources.query({
 		data_source_id: DATASOURCE_ID,
 		page_size: 100,
 		start_cursor: cursor,
@@ -60,7 +70,7 @@ async function queryDatabase(cursor, lastUpdatedAt) {
 
 export function updateNotionPage(pageId, properties) {
 	// Update the game's page in the database with the new info
-	return NOTION.pages.update({
+	return notion().pages.update({
 		page_id: pageId,
 		properties: properties.properties,
 		cover: properties.cover,
@@ -70,6 +80,9 @@ export function updateNotionPage(pageId, properties) {
 
 // Sends a simple request to the database to check if all properties exist in the database
 export async function checkNotionPropertiesExistence() {
+	// Honour an explicitly configured data source, otherwise discover it below
+	DATASOURCE_ID = CONFIG.notionDataSourceId?.trim() || null;
+
 	// Get a list of all enabled properties
 	let properties = Object.values(CONFIG.gameProperties).map(property => {
 		// Skip properties that are disabled or do not have a notionProperty value (e.g. coverImage)
@@ -80,12 +93,12 @@ export async function checkNotionPropertiesExistence() {
 	// Add the Steam App ID property to the list of properties to check
 	properties.push(CONFIG.steamAppIdProperty);
 
-	const databaseResponse = await NOTION.databases.retrieve({
-		database_id: DATABASE_ID
+	const databaseResponse = await notion().databases.retrieve({
+		database_id: CONFIG.notionDatabaseId?.trim()
 	});
 
-	if (CONFIG.notionDataSourceId) {
-		if (databaseResponse.data_sources.find(ds => ds.id === CONFIG.notionDataSourceId) === undefined) {
+	if (DATASOURCE_ID) {
+		if (databaseResponse.data_sources.find(ds => ds.id === DATASOURCE_ID) === undefined) {
 			console.error("Error validating configuration file: Notion database does not contain a data source with the ID specified in the configuration file. Check the \"notionDataSourceId\" property in your config.json");
 			process.exit(1);
 		}
@@ -96,7 +109,7 @@ export async function checkNotionPropertiesExistence() {
 		process.exit(1);
 	}
 
-	const response = await NOTION.dataSources.retrieve({
+	const response = await notion().dataSources.retrieve({
 		data_source_id: DATASOURCE_ID
 	});
 
@@ -114,7 +127,7 @@ export async function setUserIdInDatabaseIfNotSet() {
 		await localDatabase.get('userId');
 	} catch (error) {
 		// If the user ID is not set, set it
-		const response = await NOTION.users.me();
+		const response = await notion().users.me();
 		await localDatabase.put('userId', response.id);
 	}
 }

@@ -11,19 +11,21 @@
 			"default": "config.schema.json"
 		},
 		"notionIntegrationKey": {
-			"description": "The secret integration key for your Notion integration. Find it on your integration dashboard after creating a new integration on https://www.notion.so/my-integrations",
+			"description": "The secret integration key for your Notion integration (create or find it at https://www.notion.so/my-integrations). Provide this via the NOTION_INTEGRATION_KEY environment variable - storing it here is no longer allowed and the integration will refuse to run if it is set.",
 			"type": "string",
 			"default": ""
 		},
 		"notionDatabaseId": {
-			"description": "The ID of the database you want to run the integration on. You can find the ID in the URL of your database, e.g. https://www.notion.so/myworkspace/your-database-id",
+			"description": "The ID of the database you want to run the integration on. You can find the ID in the URL of your database, e.g. https://www.notion.so/myworkspace/your-database-id. This is a 32-character hexadecimal ID (or the dashed UUID form).",
 			"type": "string",
-			"default": ""
+			"default": "",
+			"pattern": "^([0-9a-fA-F]{32}|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})?$"
 		},
 		"notionDataSourceId": {
-			"description": "The ID of the data source you want to run the integration on. This is required if you have multiple data sources in your database. You can find the ID under the \"Manage data sources\" menu in the database settings. If you only have one data source (which is the default), you can leave this property empty.",
+			"description": "The ID of the data source you want to run the integration on. This is required if you have multiple data sources in your database. You can find the ID under the \"Manage data sources\" menu in the database settings. If you only have one data source (which is the default), you can leave this property empty. This is a 32-character hexadecimal ID (or the dashed UUID form).",
 			"type": "string",
-			"default": ""
+			"default": "",
+			"pattern": "^([0-9a-fA-F]{32}|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})?$"
 		},
 		"updateInterval": {
 			"description": "The interval in which the integration will check for updates to your Notion database. The value is in milliseconds. Must be at least 60000 (1 minute).",
@@ -46,17 +48,21 @@
 			"type": "boolean",
 			"default": false
 		},
+		"databasePath": {
+			"description": "Where to store the local database that tracks which entries have already been processed (and the cached Steam refresh token). Leave empty to use the OS-native per-user data directory (Windows %LOCALAPPDATA%, macOS ~/Library/Application Support, Linux $XDG_DATA_HOME or ~/.local/share), which is stable no matter where you run the integration from. Set it to store the database somewhere else instead.",
+			"type": "string",
+			"default": ""
+		},
 		"steamUser": {
-			"description": "Login details to authenticate to your Steam account. This is required to be able to fetch tag data. If you have Steam Guard enabled, you will need to provide the Steam Guard code when running the app. Once logged in, the integration will store a local refresh token for ~200 days before you need to log in again. The integration does not transmit any of your login details anywhere, they are used internally to authenticate yourself to the Steam API. If you do not want to fetch tag data, you do not need to provide this property!",
+			"description": "Steam login details, only required to fetch tag data. Provide \"accountName\" here and your password via the STEAM_PASSWORD environment variable (storing the password here is no longer allowed). If you have Steam Guard enabled, you will be prompted for the code when the integration runs. Once logged in, the integration stores a local refresh token for ~200 days, set \"useRefreshToken\" to true to reuse it. None of these details are transmitted anywhere, they are used only to authenticate you to the Steam API. If you do not fetch tag data, you do not need this property!",
 			"type": "object",
 			"default": {
-				"accountName": "<steamAccountName>",
-				"password": "<steamAccountPassword>"
+				"accountName": "<steamAccountName>"
 			},
 			"additionalProperties": false,
 			"properties": {
 				"useRefreshToken": {
-					"description": "If true, the integration will try to use the refresh token stored in the local database to authenticate to your Steam account. You can only set this to \"true\" if you have previously logged in using \"accountName\" and \"password\", and the refresh token is still valid.",
+					"description": "When true or omitted, the integration reuses a refresh token stored in the local database from a previous login, so you do not need to provide your password again. Set to false to force a fresh login with your accountName and password.",
 					"type": "boolean",
 					"default": false
 				},
@@ -66,29 +72,11 @@
 					"default": "<steamAccountName>"
 				},
 				"password": {
-					"description": "Your Steam account password.",
+					"description": "Your Steam account password. Provide this via the STEAM_PASSWORD environment variable - storing it here is no longer allowed and the integration will refuse to run if it is set.",
 					"type": "string",
-					"default": "<steamAccountPassword>"
+					"default": ""
 				}
-			},
-			"oneOf": [
-				{
-					"required": [
-						"accountName",
-						"password"
-					]
-				},
-				{
-					"properties": {
-						"useRefreshToken": {
-							"const": true
-						}
-					},
-					"required": [
-						"useRefreshToken"
-					]
-				}
-			]
+			}
 		},
 		"gameProperties": {
 			"description": "Which game properties should be fetched when a new Steam game is detected, and the name of the corresponding field in the Notion database.",
@@ -316,7 +304,7 @@
 					]
 				},
 				"tags": {
-					"description": "Requires Steam login! Provide \"accountName\" and \"password\" in the top-level \"steamUser\" property, \"refreshToken\" if you already logged in before! The user-defined tags of the game as they can be seen on the store page. The database field in Notion must be of type \"Multi-select\".",
+					"description": "Requires Steam login! Provide \"accountName\" in the top-level \"steamUser\" property and your password via the STEAM_PASSWORD environment variable, or set \"useRefreshToken\" to true if you have logged in before! The user-defined tags of the game as they can be seen on the store page. The database field in Notion must be of type \"Multi-select\".",
 					"type": "object",
 					"default": {
 						"enabled": true,
@@ -501,7 +489,6 @@
 		}
 	},
 	"required": [
-		"notionIntegrationKey",
 		"notionDatabaseId",
 		"updateInterval",
 		"steamAppIdProperty",
@@ -510,10 +497,19 @@
 	"allOf": [
 		{
 			"if": {
+				"required": [
+					"gameProperties"
+				],
 				"properties": {
 					"gameProperties": {
+						"required": [
+							"tags"
+						],
 						"properties": {
 							"tags": {
+								"required": [
+									"enabled"
+								],
 								"properties": {
 									"enabled": {
 										"const": true

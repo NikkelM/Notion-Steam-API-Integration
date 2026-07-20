@@ -1,15 +1,13 @@
 {
 	"$schema": "config.schema.json",
-	"notionIntegrationKey": "<secretKey>",
-	"notionDatabaseId": "<databaseId>",
-	"notionDataSourceId": "<dataSourceIdIfMultipleDataSources>",
+	"notionDatabaseId": "",
+	"notionDataSourceId": "",
 	"updateInterval": 60000,
 	"steamAppIdProperty": "Steam App ID",
 	"forceReset": false,
 	"alwaysUpdate": false,
 	"steamUser": {
-		"accountName": "<steamAccountName>",
-		"password": "<steamPassword>"
+		"accountName": "<steamAccountName>"
 	},
 	"gameProperties": {
 		"gameName": {
@@ -19,7 +17,7 @@
 		},
 		"coverImage": {
 			"enabled": true,
-			"default": "https://cdn.cloudflare.steamstatic.com/store/home/store_home_share.jpg" 
+			"default": "https://cdn.cloudflare.steamstatic.com/store/home/store_home_share.jpg"
 		},
 		"gameIcon": {
 			"enabled": true,
